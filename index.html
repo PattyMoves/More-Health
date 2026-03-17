@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gluco — Diabetes Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--s1:#13131a;--s2:#1c1c26;--s3:#242432;
+  --bdr:rgba(255,255,255,0.07);--bdr2:rgba(255,255,255,0.13);
+  --txt:#f0f0f5;--mut:#8888a0;--sub:#55556a;
+  --gr:#30d158;--gr-d:rgba(48,209,88,0.12);
+  --or:#ff9f0a;--or-d:rgba(255,159,10,0.12);
+  --rd:#ff453a;--rd-d:rgba(255,69,58,0.12);
+  --bl:#0a84ff;--bl-d:rgba(10,132,255,0.12);
+  --pu:#bf5af2;--pu-d:rgba(191,90,242,0.1);
+  --r:16px;--rm:12px;--rs:8px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;min-height:100vh}
+.app{max-width:900px;margin:0 auto;padding:1.5rem 1.5rem 5rem}
+
+/* HEADER */
+.hdr{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--bdr)}
+.hdr-l h1{font-family:'Playfair Display',serif;font-size:26px;font-weight:400;letter-spacing:-.01em;background:linear-gradient(135deg,#f0f0f5,#8888a0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hdr-l p{font-size:11px;color:var(--mut);margin-top:2px;letter-spacing:.05em;text-transform:uppercase}
+.hdr-r{font-size:11px;color:var(--sub);text-align:right}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:var(--s1);border-radius:14px;padding:4px;margin-bottom:1.75rem;border:1px solid var(--bdr);overflow-x:auto}
+.tab{flex:1;min-width:80px;padding:8px 4px;text-align:center;border-radius:10px;font-size:11px;font-weight:500;cursor:pointer;color:var(--mut);transition:all .2s;border:none;background:none;white-space:nowrap;letter-spacing:.01em}
+.tab.active{background:var(--s3);color:var(--txt);box-shadow:0 2px 8px rgba(0,0,0,0.4)}
+.tab:hover:not(.active){color:var(--txt)}
+.page{display:none}.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--s1);border-radius:var(--r);border:1px solid var(--bdr);padding:1.5rem;margin-bottom:1rem}
+.card2{background:var(--s2);border-radius:var(--rm);border:1px solid var(--bdr);padding:1rem}
+
+/* METRICS */
+.mrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+.mtile{background:var(--s1);border-radius:var(--rm);border:1px solid var(--bdr);padding:1rem 1.1rem;transition:border-color .2s}
+.mtile:hover{border-color:var(--bdr2)}
+.mtile .lbl{font-size:10px;font-weight:600;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.mtile .val{font-size:22px;font-weight:300;letter-spacing:-.03em}
+.v-ok{color:var(--gr)}.v-warn{color:var(--or)}.v-crit{color:var(--rd)}.v-neu{color:var(--txt)}
+
+/* SECTION HEADER */
+.sh{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem}
+.sh-t{font-size:15px;font-weight:500;letter-spacing:-.01em}
+.sh-s{font-size:12px;color:var(--mut);margin-top:3px}
+
+/* FORMS */
+.frow{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fg label{font-size:10px;font-weight:600;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.fg input,.fg select{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rs);padding:9px 13px;font-size:14px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.fg input:focus,.fg select:focus{border-color:var(--bl)}
+.fg select option{background:var(--s2)}
+.fg input[type=number]{width:110px}
+.fg input[type=text]{width:185px}
+.fg input::placeholder{color:var(--sub)}
+
+/* BUTTONS */
+.btn{border:none;border-radius:var(--rs);padding:10px 20px;font-size:13px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:all .15s}
+.btn-p{background:var(--bl);color:#fff}.btn-p:hover{background:#2194ff}.btn-p:active{transform:scale(.98)}
+.btn-g{background:var(--s2);color:var(--txt);border:1px solid var(--bdr)}.btn-g:hover{border-color:var(--bdr2);background:var(--s3)}
+.btn-p:disabled,.btn-g:disabled{opacity:.4;cursor:not-allowed}
+.btn-full{width:100%}
+.btn-green{background:var(--gr);color:#000}.btn-green:hover{opacity:.88}
+
+/* ALERT */
+.alert{border-radius:var(--rm);padding:12px 16px;font-size:13px;margin-bottom:1rem;display:flex;align-items:center;gap:12px;border:1px solid}
+.ai{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;color:#000}
+.a-ok{background:var(--gr-d);color:var(--gr);border-color:rgba(48,209,88,.2)}.a-ok .ai{background:var(--gr)}
+.a-warn{background:var(--or-d);color:var(--or);border-color:rgba(255,159,10,.2)}.a-warn .ai{background:var(--or)}
+.a-crit{background:var(--rd-d);color:var(--rd);border-color:rgba(255,69,58,.2)}.a-crit .ai{background:var(--rd)}
+
+/* BADGE */
+.bdg{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.b-ok{background:var(--gr-d);color:var(--gr)}.b-warn{background:var(--or-d);color:var(--or)}.b-crit{background:var(--rd-d);color:var(--rd)}
+.bdot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.b-ok .bdot{background:var(--gr)}.b-warn .bdot{background:var(--or)}.b-crit .bdot{background:var(--rd)}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;padding:9px 10px;text-align:left;border-bottom:1px solid var(--bdr)}
+td{padding:10px;border-bottom:1px solid var(--bdr);font-size:13px}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,.015)}
+
+/* CHART */
+.chwrap{position:relative;width:100%;height:220px}
+
+/* DISCLAIMER */
+.disc{font-size:11px;color:var(--sub);border-top:1px solid var(--bdr);margin-top:1.25rem;padding-top:.75rem;line-height:1.7}
+.warn-box{background:rgba(255,159,10,.06);border:1px solid rgba(255,159,10,.18);border-radius:var(--rm);padding:.9rem 1rem;margin-top:1rem;font-size:11px;color:var(--or);line-height:1.7}
+
+/* TOGGLE */
+.tog{position:relative;width:44px;height:26px;flex-shrink:0}
+.tog input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--s3);border-radius:26px;cursor:pointer;transition:.3s;border:1px solid var(--bdr)}
+.tslider:before{content:'';position:absolute;width:20px;height:20px;left:2px;top:2px;background:var(--mut);border-radius:50%;transition:.3s}
+.tog input:checked+.tslider{background:var(--bl);border-color:var(--bl)}
+.tog input:checked+.tslider:before{transform:translateX(18px);background:#fff}
+
+/* CALC RESULT */
+.calc-res{background:var(--s2);border-radius:var(--rm);border:1px solid var(--bdr);padding:1rem 1.25rem;margin-top:1rem}
+.cr-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bdr)}
+.cr-row:last-child{border-bottom:none}
+.cr-lbl{font-size:12px;color:var(--mut)}
+.cr-val{font-size:14px;font-weight:500}
+
+/* HBAC */
+.hbwrap{background:var(--s2);border-radius:20px;height:8px;overflow:hidden;margin:12px 0 6px;border:1px solid var(--bdr)}
+.hbfill{height:8px;border-radius:20px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.hbscale{display:flex;justify-content:space-between;font-size:10px;color:var(--sub)}
+.hbbig{font-family:'Playfair Display',serif;font-size:40px;font-weight:400;letter-spacing:-.04em}
+.hbgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:1rem}
+.hbfact{background:var(--s2);border-radius:var(--rm);padding:1rem;border:1px solid var(--bdr)}
+.hbfact .fl{font-size:10px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.hbfact .fv{font-size:16px;font-weight:400}
+
+/* REMINDER */
+.rem-item{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--bdr)}
+.rem-item:last-child{border-bottom:none}
+.rem-ico{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.rem-inf{flex:1}
+.rem-n{font-size:13px;font-weight:500}
+.tinput{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rs);padding:6px 10px;font-size:12px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;margin-top:4px}
+.tinput:focus{border-color:var(--bl)}
+
+/* RECIPES */
+.rcats{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.rcat{padding:7px 18px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid;transition:all .2s;font-family:'Inter',sans-serif}
+.rc-low{border-color:var(--or);color:var(--or)}.rc-low.sel{background:var(--or);color:#000}
+.rc-mid{border-color:var(--gr);color:var(--gr)}.rc-mid.sel{background:var(--gr);color:#000}
+.rc-hi{border-color:var(--rd);color:var(--rd)}.rc-hi.sel{background:var(--rd);color:#fff}
+.rcard{background:var(--s1);border-radius:var(--r);border:1px solid var(--bdr);padding:1.5rem;margin-bottom:.75rem;transition:border-color .2s}
+.rcard:hover{border-color:var(--bdr2)}
+.rcard-n{font-size:15px;font-weight:500;letter-spacing:-.01em;margin-bottom:5px}
+.rcard-d{font-size:12px;color:var(--mut);margin-bottom:12px;line-height:1.6}
+.mpills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.mpill{border-radius:20px;padding:4px 12px;font-size:11px;font-weight:500}
+.mp-kcal{background:var(--pu-d);color:var(--pu)}.mp-kh{background:var(--or-d);color:var(--or)}.mp-pr{background:var(--bl-d);color:var(--bl)}.mp-fat{background:rgba(255,255,255,.06);color:var(--mut)}.mp-bs{background:var(--gr-d);color:var(--gr)}
+.rcard-steps ol{padding-left:1.2rem}.rcard-steps li{font-size:13px;line-height:1.7;margin-bottom:4px}
+
+/* OPTIMIZER */
+.opt-grid{display:grid;grid-template-columns:1fr auto 1fr 1fr 1fr;gap:12px;align-items:end;margin-bottom:1.5rem}
+.og-fg{display:flex;flex-direction:column;gap:6px}
+.og-fg label{font-size:10px;font-weight:600;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.og-wrap{position:relative}
+.og-wrap input{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 36px 10px 13px;font-size:15px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;transition:border-color .2s;width:100%}
+.og-wrap input:focus{border-color:var(--gr)}
+.og-unit{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--mut)}
+.og-fg select{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rs);padding:10px 13px;font-size:13px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;-webkit-appearance:none;width:100%}
+.og-fg select option{background:var(--s2)}
+.og-arrow{font-size:18px;color:var(--sub);padding-bottom:10px;text-align:center}
+.srow{display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.meals-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:1rem}
+.mcrd{background:var(--s2);border-radius:var(--rm);border:1px solid var(--bdr);padding:1.25rem;animation:fadeUp .5s both}
+.mcrd:nth-child(2){animation-delay:.1s}.mcrd:nth-child(3){animation-delay:.2s}
+.mt-bdg{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;margin-bottom:.75rem;text-transform:uppercase;letter-spacing:.06em}
+.mbar-row{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.mbar-lbl{font-size:10px;color:var(--mut);width:50px;flex-shrink:0;text-align:right}
+.mbar-trk{flex:1;background:rgba(255,255,255,.06);border-radius:20px;height:5px;overflow:hidden}
+.mbar-fill{height:5px;border-radius:20px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.mbar-v{font-size:10px;font-weight:500;width:34px;flex-shrink:0}
+.day-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.day-item{text-align:center}
+.day-v{font-size:18px;font-weight:300;letter-spacing:-.03em;margin-bottom:2px}
+.day-l{font-size:10px;color:var(--mut);letter-spacing:.04em}
+.tips-box{background:rgba(48,209,88,.04);border:1px solid rgba(48,209,88,.12);border-radius:var(--rm);padding:1.25rem}
+.tips-t{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--gr);margin-bottom:.85rem}
+.tip-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.tip-dot{width:6px;height:6px;background:var(--gr);border-radius:50%;margin-top:5px;flex-shrink:0}
+.tip-item p{font-size:12px;color:var(--mut);line-height:1.6}
+.prog-bar-wrap{background:rgba(255,255,255,.06);border-radius:20px;height:10px;overflow:hidden;position:relative;margin:10px 0 6px}
+.prog-bar-bg{position:absolute;left:0;top:0;height:10px;border-radius:20px;opacity:.25;transition:width 1s .2s cubic-bezier(.4,0,.2,1)}
+.prog-bar-fg{position:absolute;left:0;top:0;height:10px;border-radius:20px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+
+/* GI LOOKUP */
+.gi-search-row{display:flex;gap:12px}
+.gi-search-wrap{flex:1;position:relative}
+.gi-input{width:100%;background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rm);padding:13px 48px 13px 18px;font-size:15px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;transition:border-color .2s}
+.gi-input:focus{border-color:var(--gr)}
+.gi-input::placeholder{color:var(--sub)}
+.gi-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--sub);font-size:16px;pointer-events:none}
+.gi-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:1rem}
+.gchip{padding:5px 13px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);color:var(--mut);background:transparent;font-family:'Inter',sans-serif;transition:all .2s}
+.gchip:hover{border-color:var(--bdr2);color:var(--txt)}
+.gi-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:1.5rem;padding:.8rem 1rem;background:rgba(255,255,255,.02);border:1px solid var(--bdr);border-radius:var(--rm)}
+.gl-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut)}
+.gldot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.gi-hero{background:var(--s1);border:1px solid var(--bdr);border-radius:var(--r);padding:1.75rem;margin-bottom:1rem;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:1.5rem;align-items:center}
+.gi-hero-name{font-family:'Playfair Display',serif;font-size:22px;font-weight:400;letter-spacing:-.01em;margin-bottom:4px}
+.gi-hero-cat{font-size:12px;color:var(--mut)}
+.gi-score{text-align:center}
+.gi-num{font-family:'Playfair Display',serif;font-size:38px;font-weight:400;line-height:1;letter-spacing:-.03em}
+.gi-slbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-top:4px}
+.gbar-trk{background:rgba(255,255,255,.06);border-radius:20px;height:6px;overflow:hidden;margin:8px auto 6px;max-width:120px}
+.gbar-fill{height:6px;border-radius:20px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.gi-portion-block{background:var(--s2);border-radius:var(--rm);border:1px solid var(--bdr);padding:.9rem 1rem}
+.gi-prow{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.gi-prow label{font-size:11px;color:var(--mut);width:58px;flex-shrink:0}
+.gi-pinput{background:var(--s2);border:1px solid var(--bdr);border-radius:var(--rs);padding:6px 10px;font-size:13px;font-family:'Inter',sans-serif;color:var(--txt);outline:none;width:80px}
+.gi-pinput:focus{border-color:var(--gr)}
+.gi-gl-big{font-size:22px;font-weight:300;letter-spacing:-.02em;margin-top:5px}
+.gi-tbl-wrap{overflow-x:auto}
+table.gtbl{width:100%;border-collapse:collapse}
+table.gtbl th{font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;padding:9px 14px;text-align:left;border-bottom:1px solid var(--bdr);cursor:pointer;user-select:none;white-space:nowrap}
+table.gtbl th:hover{color:var(--txt)}
+table.gtbl th.gsorted{color:var(--gr)}
+table.gtbl td{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px}
+table.gtbl tr:last-child td{border-bottom:none}
+table.gtbl tr:hover td{background:rgba(255,255,255,.015)}
+table.gtbl tr.ghl td{background:rgba(48,209,88,.04)}
+.gbar-row{display:flex;align-items:center;gap:7px}
+.gbar-mini{width:55px;background:rgba(255,255,255,.06);border-radius:20px;height:4px;overflow:hidden;flex-shrink:0}
+.gbar-mini-fill{height:4px;border-radius:20px}
+.sort-btns{display:flex;gap:5px}
+.sbtn{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--bdr);color:var(--mut);background:transparent;font-family:'Inter',sans-serif;transition:all .2s}
+.sbtn.active{background:var(--gr-d);border-color:rgba(48,209,88,.25);color:var(--gr)}
+
+/* NOTIF BANNER */
+.notif-banner{background:var(--bl-d);color:var(--bl);border:1px solid rgba(10,132,255,.2);border-radius:var(--rm);padding:10px 14px;font-size:12px;margin-bottom:1rem;display:none}
+.notif-banner.show{display:block}
+
+/* LOADING */
+.loading-box{text-align:center;padding:2.5rem}
+.ldots{display:flex;gap:7px;justify-content:center;margin-bottom:.85rem}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--bl);animation:lpulse 1.3s infinite}
+.ldot:nth-child(2){animation-delay:.22s}.ldot:nth-child(3){animation-delay:.44s}
+@keyframes lpulse{0%,80%,100%{opacity:.15}40%{opacity:1}}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+@media(max-width:640px){
+  .mrow{grid-template-columns:repeat(2,1fr)}
+  .hbgrid,.opt-grid,.meals-grid,.gi-hero,.day-grid{grid-template-columns:1fr}
+  .og-arrow{display:none}
+  .day-grid{grid-template-columns:repeat(3,1fr)}
+  .fg input[type=text]{width:100%}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <div class="hdr-l">
+    <h1>Gluco</h1>
+    <p>Persönliches Diabetes-Protokoll</p>
+  </div>
+  <div class="hdr-r" id="hdr-date"></div>
+</div>
+
+<div id="alert-box"></div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('dashboard',this)">Übersicht</button>
+  <button class="tab" onclick="switchTab('log',this)">Protokoll</button>
+  <button class="tab" onclick="switchTab('meals',this)">Mahlzeiten</button>
+  <button class="tab" onclick="switchTab('hba1c',this)">HbA1c</button>
+  <button class="tab" onclick="switchTab('reminders',this)">Erinnerungen</button>
+  <button class="tab" onclick="switchTab('recipes',this)">Rezepte</button>
+  <button class="tab" onclick="switchTab('optimizer',this)">Tagesplan</button>
+  <button class="tab" onclick="switchTab('gi',this)">GI-Datenbank</button>
+</div>
+
+<!-- ======== ÜBERSICHT ======== -->
+<div class="page active" id="page-dashboard">
+  <div class="mrow">
+    <div class="mtile"><div class="lbl">Letzter Wert</div><div class="val v-neu" id="m-last">—</div></div>
+    <div class="mtile"><div class="lbl">Tagesdurchschnitt</div><div class="val v-neu" id="m-avg">—</div></div>
+    <div class="mtile"><div class="lbl">Im Zielbereich</div><div class="val v-neu" id="m-range">—</div></div>
+    <div class="mtile"><div class="lbl">Einträge</div><div class="val v-neu" id="m-count">0</div></div>
+  </div>
+  <div class="card">
+    <div class="sh"><div class="sh-t">Neuen Wert eintragen</div></div>
+    <div class="frow">
+      <div class="fg"><label>Wert (mg/dL)</label><input type="number" id="bz-val" min="20" max="600" placeholder="120"></div>
+      <div class="fg"><label>Messzeitpunkt</label>
+        <select id="bz-time"><option>Nüchtern</option><option>Vor dem Essen</option><option>Nach dem Essen</option><option>Vor dem Schlafen</option><option>Sonstige</option></select>
+      </div>
+      <div class="fg"><label>Notiz</label><input type="text" id="bz-note" placeholder="Optional..."></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="addBZ()">+ Eintragen</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sh"><div class="sh-t">Verlauf</div></div>
+    <div class="chwrap"><canvas id="bzChart"></canvas></div>
+    <div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut)"><span style="width:18px;height:2px;background:var(--bl);display:inline-block;border-radius:2px"></span>Messwert</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut)"><span style="width:18px;height:2px;border-top:1.5px dashed var(--gr);display:inline-block"></span>Zielbereich 80–160</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut)"><span style="width:8px;height:8px;background:var(--or);border-radius:50%;display:inline-block"></span>Niedrig</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mut)"><span style="width:8px;height:8px;background:var(--rd);border-radius:50%;display:inline-block"></span>Erhöht</span>
+    </div>
+  </div>
+</div>
+
+<!-- ======== PROTOKOLL ======== -->
+<div class="page" id="page-log">
+  <div class="card">
+    <div class="sh">
+      <div><div class="sh-t">Blutzucker-Protokoll</div><div class="sh-s">Alle Messungen</div></div>
+      <button class="btn btn-g" onclick="exportCSV()" style="font-size:12px">CSV Export</button>
+    </div>
+    <table><thead><tr><th>Uhrzeit</th><th>Wert</th><th>Status</th><th>Zeitpunkt</th><th>Notiz</th></tr></thead>
+    <tbody id="bz-body"><tr><td colspan="5" style="color:var(--sub);text-align:center;padding:3rem;font-size:13px">Noch keine Einträge</td></tr></tbody></table>
+  </div>
+</div>
+
+<!-- ======== MAHLZEITEN ======== -->
+<div class="page" id="page-meals">
+  <div class="card">
+    <div class="sh"><div class="sh-t">Mahlzeit erfassen</div></div>
+    <div class="frow">
+      <div class="fg"><label>Mahlzeit</label><input type="text" id="meal-name" placeholder="z.B. Vollkornbrot"></div>
+      <div class="fg"><label>Kohlenhydrate (g)</label><input type="number" id="meal-kh" min="0" placeholder="45" style="width:130px" oninput="liveCalc()"></div>
+      <div class="fg"><label>Protein (g)</label><input type="number" id="meal-pr" min="0" placeholder="20" style="width:100px" oninput="liveCalc()"></div>
+      <div class="fg"><label>Fett (g)</label><input type="number" id="meal-fat" min="0" placeholder="10" style="width:100px" oninput="liveCalc()"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="addMeal()">+ Speichern</button></div>
+    </div>
+    <div id="meal-calc" style="display:none" class="calc-res">
+      <div class="cr-row"><span class="cr-lbl">Kalorien (geschätzt)</span><span class="cr-val" id="c-kcal">—</span></div>
+      <div class="cr-row"><span class="cr-lbl">Broteinheiten (BE) <span style="font-size:10px;color:var(--sub);margin-left:4px">1 BE = 12 g KH</span></span><span class="cr-val" id="c-be">—</span></div>
+      <div class="cr-row"><span class="cr-lbl">KH-Einheiten (KE) <span style="font-size:10px;color:var(--sub);margin-left:4px">1 KE = 10 g KH</span></span><span class="cr-val" id="c-ke">—</span></div>
+      <div class="cr-row"><span class="cr-lbl">Insulin-Richtwert <span style="font-size:10px;color:var(--sub);margin-left:4px">0.5–2 IE/BE</span></span><span class="cr-val" style="color:var(--or)" id="c-ins">—</span></div>
+    </div>
+    <div class="warn-box">
+      <strong>Wichtiger Hinweis:</strong> Die Insulinangabe ist ein allgemeiner rechnerischer Richtwert und stellt <em>keine medizinische Empfehlung</em> dar. Dein individueller Korrekturfaktor muss ausschließlich mit deinem Arzt oder Diabetologen festgelegt werden.
+    </div>
+  </div>
+  <div class="card">
+    <div class="sh"><div class="sh-t">Mahlzeiten-Protokoll</div></div>
+    <table><thead><tr><th>Zeit</th><th>Mahlzeit</th><th>KH</th><th>BE</th><th>Protein</th><th>Fett</th><th>kcal</th></tr></thead>
+    <tbody id="meal-body"><tr><td colspan="7" style="color:var(--sub);text-align:center;padding:3rem;font-size:13px">Noch keine Einträge</td></tr></tbody></table>
+    <div class="disc">Kalorienangaben sind Schätzwerte (4 kcal/g KH & Protein, 9 kcal/g Fett). Die App ersetzt keine ärztliche Ernährungsberatung.</div>
+  </div>
+</div>
+
+<!-- ======== HBA1C ======== -->
+<div class="page" id="page-hba1c">
+  <div class="card">
+    <div class="sh"><div><div class="sh-t">HbA1c-Schätzer</div><div class="sh-s">Basierend auf gespeicherten Messwerten</div></div></div>
+    <div id="hba1c-empty" style="color:var(--sub);font-size:13px;padding:.5rem 0 1rem">Mindestens 3 Messwerte erforderlich.</div>
+    <div id="hba1c-result" style="display:none">
+      <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+        <span class="hbbig" id="hba1c-val">—</span>
+        <span style="font-size:20px;color:var(--mut)">%</span>
+        <span class="bdg" id="hba1c-badge" style="margin-left:6px"></span>
+      </div>
+      <div class="hbwrap"><div class="hbfill" id="hba1c-bar" style="width:0%"></div></div>
+      <div class="hbscale"><span>4%</span><span>5.7%</span><span>6.5%</span><span>8%</span><span>10%+</span></div>
+      <div class="hbgrid">
+        <div class="hbfact"><div class="fl">Ø Blutzucker</div><div class="fv" id="hba1c-avg">—</div></div>
+        <div class="hbfact"><div class="fl">Anzahl Messungen</div><div class="fv" id="hba1c-n">—</div></div>
+        <div class="hbfact"><div class="fl">Geschätzter eAG</div><div class="fv" id="hba1c-eag">—</div></div>
+        <div class="hbfact"><div class="fl">Trend</div><div class="fv" id="hba1c-trend">—</div></div>
+      </div>
+    </div>
+    <div class="disc">Schätzwert basiert auf der eAG-Formel der ADA (Atkinson et al.) und ersetzt <strong>keinen Labortest</strong>. Bitte regelmäßig beim Arzt den echten HbA1c bestimmen lassen.</div>
+  </div>
+</div>
+
+<!-- ======== ERINNERUNGEN ======== -->
+<div class="page" id="page-reminders">
+  <div id="notif-banner" class="notif-banner">Benachrichtigungen sind aktiviert.</div>
+  <div class="card">
+    <div class="sh"><div><div class="sh-t">Mess-Erinnerungen</div><div class="sh-s">Zeiten anpassen und aktivieren</div></div></div>
+    <div id="reminder-list"></div>
+    <div style="margin-top:1.25rem"><button class="btn btn-p btn-full" onclick="requestNotif()" id="notif-btn">Benachrichtigungen aktivieren</button></div>
+    <div class="disc">Funktioniert nur bei geöffneter App im Browser. Keine Daten auf externen Servern.</div>
+  </div>
+  <div class="card">
+    <div class="sh"><div class="sh-t">Eigene Erinnerung</div></div>
+    <div class="frow">
+      <div class="fg"><label>Bezeichnung</label><input type="text" id="rem-name" placeholder="z.B. Nach dem Sport"></div>
+      <div class="fg"><label>Uhrzeit</label><input type="time" id="rem-time-inp" class="tinput" style="padding:9px 12px;font-size:14px"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="addCustomRem()">+ Hinzufügen</button></div>
+    </div>
+    <div id="custom-rem-list" style="margin-top:1rem"></div>
+  </div>
+</div>
+
+<!-- ======== REZEPTE ======== -->
+<div class="page" id="page-recipes">
+  <div class="card">
+    <div class="sh-t" style="margin-bottom:6px">KI-Rezeptvorschläge</div>
+    <div style="font-size:12px;color:var(--mut);margin-bottom:1.25rem;line-height:1.7">Wähle eine Kategorie passend zu deinem aktuellen Blutzuckerwert. Die KI erstellt 5 maßgeschneiderte Rezepte.</div>
+    <div class="rcats">
+      <button class="rcat rc-low sel" onclick="selRecipeCat('low',this)">Niedrig — unter 80 mg/dL</button>
+      <button class="rcat rc-mid" onclick="selRecipeCat('mid',this)">Normal — 80–160 mg/dL</button>
+      <button class="rcat rc-hi" onclick="selRecipeCat('high',this)">Erhöht — über 160 mg/dL</button>
+    </div>
+    <button class="btn btn-p btn-full" onclick="loadRecipes()">5 Rezepte generieren</button>
+  </div>
+  <div id="recipe-loading" style="display:none" class="loading-box card">
+    <div class="ldots"><div class="ldot"></div><div class="ldot"></div><div class="ldot"></div></div>
+    <div style="font-size:13px;color:var(--mut)">KI generiert Rezepte...</div>
+  </div>
+  <div id="recipe-output"></div>
+  <div class="disc" style="border-top:none;padding-top:0;margin-top:.25rem">Rezeptvorschläge sind allgemeine Ernährungsinspirationen und keine individuelle medizinische Ernährungsberatung.</div>
+</div>
+
+<!-- ======== TAGESPLAN OPTIMIZER ======== -->
+<div class="page" id="page-optimizer">
+  <div class="card">
+    <div class="sh"><div><div class="sh-t">HbA1c-Tagesplan Optimierer</div><div class="sh-s">3 Mahlzeiten gezielt auf dein Ziel ausrichten</div></div></div>
+    <div class="opt-grid">
+      <div class="og-fg"><label>Aktueller HbA1c (%)</label><div class="og-wrap"><input type="number" id="opt-cur" placeholder="7.2" min="4" max="14" step="0.1"><span class="og-unit">%</span></div></div>
+      <div class="og-arrow">→</div>
+      <div class="og-fg"><label>Ziel-HbA1c (%)</label><div class="og-wrap"><input type="number" id="opt-tgt" placeholder="6.0" min="4" max="14" step="0.1"><span class="og-unit">%</span></div></div>
+      <div class="og-fg"><label>Diabetestyp</label><select id="opt-typ"><option value="typ1">Typ 1</option><option value="typ2" selected>Typ 2</option><option value="prä">Prädiabetes</option></select></div>
+      <div class="og-fg"><label>Aktivität</label><select id="opt-act"><option value="niedrig">Wenig aktiv</option><option value="mittel" selected>Mäßig aktiv</option><option value="hoch">Sehr aktiv</option></select></div>
+    </div>
+    <div class="srow">
+      <span style="font-size:12px;color:var(--mut)">Optimierungsintensität</span>
+      <div style="display:flex;align-items:center;gap:10px;flex:1;max-width:300px">
+        <span style="font-size:11px;color:var(--sub)">Sanft</span>
+        <input type="range" id="opt-agg" min="1" max="3" value="2" step="1" style="flex:1" oninput="document.getElementById('opt-agg-lbl').textContent=['Sanft','Moderat','Intensiv'][this.value-1]">
+        <span style="font-size:11px;color:var(--sub)">Intensiv</span>
+      </div>
+      <span id="opt-agg-lbl" style="font-size:12px;color:var(--gr);min-width:70px;text-align:right">Moderat</span>
+    </div>
+    <button class="btn btn-green btn-full" onclick="genPlan()" id="opt-btn"><span id="opt-btn-txt">Tagesplan generieren →</span></button>
+  </div>
+  <div id="opt-loading" style="display:none" class="loading-box card">
+    <div class="ldots"><div class="ldot"></div><div class="ldot"></div><div class="ldot"></div></div>
+    <div style="font-size:13px;color:var(--mut)" id="opt-load-msg">KI analysiert deine Werte...</div>
+  </div>
+  <div id="opt-output" style="display:none">
+    <!-- Progress -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem">
+        <div>
+          <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:6px">Dein Weg</div>
+          <div style="display:flex;align-items:baseline;gap:10px">
+            <span id="prog-cur" style="font-family:'Playfair Display',serif;font-size:28px;color:var(--or)">7.2%</span>
+            <span style="color:var(--sub);font-size:16px">→</span>
+            <span id="prog-tgt" style="font-family:'Playfair Display',serif;font-size:28px;color:var(--gr)">6.0%</span>
+          </div>
+        </div>
+        <div id="prog-weeks" style="text-align:right"></div>
+      </div>
+      <div class="prog-bar-wrap">
+        <div class="prog-bar-bg" id="pbar-tgt" style="background:var(--gr)"></div>
+        <div class="prog-bar-fg" id="pbar-cur" style="background:var(--or)"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--sub);margin-top:4px"><span>4%</span><span>5.7%</span><span>6.5%</span><span>8%</span><span>10%+</span></div>
+      <div id="prog-summary" style="margin-top:1rem;font-size:13px;color:var(--mut);line-height:1.7;background:var(--s2);border-radius:var(--rm);padding:.85rem 1rem;border:1px solid var(--bdr)"></div>
+    </div>
+    <!-- Meals -->
+    <div class="meals-grid" id="meals-grid"></div>
+    <!-- Day totals -->
+    <div class="card">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);margin-bottom:1rem">Tagessumme</div>
+      <div class="day-grid" id="day-grid"></div>
+    </div>
+    <!-- Tips -->
+    <div class="card"><div id="tips-box"></div></div>
+    <div class="disc" style="border-top:none;margin-top:0;padding-top:0">Alle Empfehlungen sind allgemeine Ernährungsinspirationen und ersetzen keine individuelle medizinische Beratung. Änderungen der Therapie immer mit dem Arzt besprechen.</div>
+  </div>
+</div>
+
+<!-- ======== GI DATENBANK ======== -->
+<div class="page" id="page-gi">
+  <div class="card">
+    <div class="sh"><div><div class="sh-t">Glykämischer Index & Glykämische Last</div><div class="sh-s">Lebensmittel suchen und mit ähnlichen vergleichen</div></div></div>
+    <div class="gi-search-row" style="margin-bottom:1rem">
+      <div class="gi-search-wrap">
+        <input class="gi-input" id="gi-input" placeholder="Lebensmittel suchen, z.B. Weißbrot, Banane, Reis..." onkeydown="if(event.key==='Enter')doGISearch()">
+        <span class="gi-icon">⌕</span>
+      </div>
+      <button class="btn btn-green" id="gi-btn" onclick="doGISearch()">Suchen</button>
+    </div>
+    <div class="gi-chips">
+      <span style="font-size:11px;color:var(--sub);align-self:center;margin-right:2px">Schnell:</span>
+      <button class="gchip" onclick="giQuick('Weißbrot')">Weißbrot</button>
+      <button class="gchip" onclick="giQuick('Vollkornbrot')">Vollkornbrot</button>
+      <button class="gchip" onclick="giQuick('Banane')">Banane</button>
+      <button class="gchip" onclick="giQuick('Haferflocken')">Haferflocken</button>
+      <button class="gchip" onclick="giQuick('Kartoffeln')">Kartoffeln</button>
+      <button class="gchip" onclick="giQuick('Linsen')">Linsen</button>
+      <button class="gchip" onclick="giQuick('Weißer Reis')">Weißer Reis</button>
+      <button class="gchip" onclick="giQuick('Apfel')">Apfel</button>
+    </div>
+  </div>
+
+  <div class="gi-legend">
+    <span style="font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">GI:</span>
+    <div class="gl-item"><span class="gldot" style="background:var(--gr)"></span>Niedrig ≤55</div>
+    <div class="gl-item"><span class="gldot" style="background:var(--or)"></span>Mittel 56–69</div>
+    <div class="gl-item"><span class="gldot" style="background:var(--rd)"></span>Hoch ≥70</div>
+    <span style="font-size:11px;color:var(--sub);margin:0 6px">·</span>
+    <span style="font-size:11px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-right:4px">GL:</span>
+    <div class="gl-item"><span class="gldot" style="background:var(--gr)"></span>Niedrig ≤10</div>
+    <div class="gl-item"><span class="gldot" style="background:var(--or)"></span>Mittel 11–19</div>
+    <div class="gl-item"><span class="gldot" style="background:var(--rd)"></span>Hoch ≥20</div>
+  </div>
+
+  <div id="gi-loading" style="display:none" class="loading-box card">
+    <div class="ldots"><div class="ldot"></div><div class="ldot"></div><div class="ldot"></div></div>
+    <div style="font-size:13px;color:var(--mut)">KI lädt Nährwertdaten...</div>
+  </div>
+
+  <div id="gi-output" style="display:none">
+    <!-- Hero result -->
+    <div class="gi-hero" id="gi-hero">
+      <div>
+        <div class="gi-hero-name" id="gi-fname">—</div>
+        <div class="gi-hero-cat" id="gi-fcat">—</div>
+      </div>
+      <div class="gi-score">
+        <div class="gi-num" id="gi-num-gi">—</div>
+        <div class="gbar-trk"><div class="gbar-fill" id="gbar-gi" style="width:0%"></div></div>
+        <div class="gi-slbl">Glykämischer Index</div>
+        <div id="gi-bdg-gi" style="margin-top:6px"></div>
+      </div>
+      <div class="gi-score">
+        <div class="gi-num" id="gi-num-gl">—</div>
+        <div class="gbar-trk"><div class="gbar-fill" id="gbar-gl" style="width:0%"></div></div>
+        <div class="gi-slbl">Glykämische Last</div>
+        <div id="gi-bdg-gl" style="margin-top:6px"></div>
+      </div>
+      <div class="gi-portion-block">
+        <div style="font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Portionsrechner</div>
+        <div class="gi-prow"><label>Portion</label><input class="gi-pinput" type="number" id="gi-portion" value="100" min="1" max="999" step="1" oninput="recalcGlPortion()"><span style="font-size:12px;color:var(--mut)">g</span></div>
+        <div class="gi-prow"><label>KH/100g</label><span id="gi-kh100" style="font-size:13px;color:var(--mut)">—</span></div>
+        <div style="font-size:10px;color:var(--mut);margin-top:6px;text-transform:uppercase;letter-spacing:.06em">GL für Portion</div>
+        <div class="gi-gl-big" id="gi-gl-por">—</div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:1.1rem 1.5rem;border-bottom:1px solid var(--bdr)">
+        <div><div class="sh-t" id="gi-tbl-title">Ähnliche Lebensmittel</div><div class="sh-s" id="gi-tbl-sub">Gleiche Kategorie</div></div>
+        <div class="sort-btns">
+          <button class="sbtn active" id="sb-gi" onclick="giSort('gi',this)">GI</button>
+          <button class="sbtn" id="sb-gl" onclick="giSort('gl',this)">GL</button>
+          <button class="sbtn" id="sb-kh" onclick="giSort('kh',this)">KH</button>
+          <button class="sbtn" id="sb-name" onclick="giSort('name',this)">A–Z</button>
+        </div>
+      </div>
+      <div class="gi-tbl-wrap">
+        <table class="gtbl">
+          <thead><tr>
+            <th>Lebensmittel</th>
+            <th>GI</th><th>GI-Stufe</th>
+            <th>KH/100g</th>
+            <th>GL (100g)</th><th>GL-Stufe</th>
+            <th>Für Diabetiker</th>
+          </tr></thead>
+          <tbody id="gi-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="disc">GI-Werte nach International Tables of Glycemic Index (Atkinson et al., Diabetes Care 2008). GL = GI × KH-Gehalt / 100. Werte können je nach Zubereitung, Reifegrad und Sorte variieren. Keine medizinische Ernährungsberatung.</div>
+  </div>
+</div>
+
+</div><!-- /app -->
+
+<script>
+'use strict';
+// ============================================================
+// STATE
+// ============================================================
+const TL=80,TH=160,DL=55,DH=300;
+let bzData=[],mealData=[],chart=null,customRems=[];
+let recipeCat='low';
+// GI state
+let giFood=null,giSimilar=[],giSortKey='gi',giSortDir=1;
+
+const defaultRems=[
+  {id:'morning',name:'Nüchtern-Messung',time:'07:00',color:'#ff9f0a',bg:'rgba(255,159,10,0.12)',icon:'○',on:false},
+  {id:'lunch',name:'Vor dem Mittagessen',time:'12:00',color:'#30d158',bg:'rgba(48,209,88,0.12)',icon:'◑',on:false},
+  {id:'afternoon',name:'Nachmittags-Messung',time:'15:30',color:'#0a84ff',bg:'rgba(10,132,255,0.12)',icon:'◐',on:false},
+  {id:'evening',name:'Abend-Messung',time:'19:00',color:'#bf5af2',bg:'rgba(191,90,242,0.12)',icon:'◕',on:false},
+  {id:'bedtime',name:'Vor dem Schlafen',time:'22:00',color:'#8888a0',bg:'rgba(136,136,160,0.12)',icon:'●',on:false},
+];
+
+// ============================================================
+// INIT
+// ============================================================
+document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+initChart();
+renderReminders();
+
+// ============================================================
+// TAB ROUTING
+// ============================================================
+function switchTab(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='hba1c') updateHbA1c();
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function nowStr(){return new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
+function getStatus(v){
+  if(v<DL||v>=DH)return{label:'Kritisch',cls:'v-crit',bcls:'b-crit'};
+  if(v<TL)return{label:'Niedrig',cls:'v-warn',bcls:'b-warn'};
+  if(v>=TH)return{label:'Erhöht',cls:'v-warn',bcls:'b-warn'};
+  return{label:'Normal',cls:'v-ok',bcls:'b-ok'};
+}
+
+// ============================================================
+// BLUTZUCKER
+// ============================================================
+function addBZ(){
+  const v=parseInt(document.getElementById('bz-val').value);
+  if(!v||v<20||v>600)return;
+  bzData.push({time:nowStr(),val:v,type:document.getElementById('bz-time').value,note:document.getElementById('bz-note').value});
+  document.getElementById('bz-val').value='';
+  document.getElementById('bz-note').value='';
+  renderBZ();updateMetrics();updateChart();showAlert(v);
+}
+
+function showAlert(v){
+  const box=document.getElementById('alert-box');
+  let cls,icon,msg;
+  if(v<DL){cls='a-crit';icon='!';msg=`Kritische Unterzuckerung (${v} mg/dL) — sofort schnelle Kohlenhydrate!`;}
+  else if(v>=DH){cls='a-crit';icon='!';msg=`Sehr hoher Blutzucker (${v} mg/dL) — bitte Arzt kontaktieren.`;}
+  else if(v<TL){cls='a-warn';icon='↓';msg=`Niedriger Blutzucker (${v} mg/dL) — bitte etwas essen.`;}
+  else if(v>=TH){cls='a-warn';icon='↑';msg=`Erhöhter Blutzucker (${v} mg/dL) — Bewegung oder Arzt empfohlen.`;}
+  else{cls='a-ok';icon='✓';msg=`Im Zielbereich (${v} mg/dL) — alles gut.`;}
+  box.innerHTML=`<div class="alert ${cls}"><div class="ai">${icon}</div><span>${msg}</span></div>`;
+}
+
+function renderBZ(){
+  const tb=document.getElementById('bz-body');
+  if(!bzData.length){tb.innerHTML='<tr><td colspan="5" style="color:var(--sub);text-align:center;padding:3rem">Noch keine Einträge</td></tr>';return;}
+  tb.innerHTML=[...bzData].reverse().map(e=>{
+    const s=getStatus(e.val);
+    return`<tr><td style="color:var(--mut)">${e.time}</td><td style="font-weight:500">${e.val} mg/dL</td><td><span class="bdg ${s.bcls}"><span class="bdot"></span>${s.label}</span></td><td style="color:var(--mut)">${e.type}</td><td style="color:var(--mut)">${e.note||'—'}</td></tr>`;
+  }).join('');
+}
+
+function updateMetrics(){
+  if(!bzData.length)return;
+  const vals=bzData.map(e=>e.val);
+  const last=vals[vals.length-1],avg=Math.round(vals.reduce((a,b)=>a+b,0)/vals.length);
+  const inRange=Math.round(vals.filter(v=>v>=TL&&v<=TH).length/vals.length*100);
+  const sl=getStatus(last);
+  document.getElementById('m-last').textContent=last;document.getElementById('m-last').className='val '+sl.cls;
+  document.getElementById('m-avg').textContent=avg;document.getElementById('m-avg').className='val '+getStatus(avg).cls;
+  document.getElementById('m-range').textContent=inRange+'%';document.getElementById('m-range').className='val '+(inRange>=70?'v-ok':inRange>=50?'v-warn':'v-crit');
+  document.getElementById('m-count').textContent=bzData.length;
+}
+
+function initChart(){
+  chart=new Chart(document.getElementById('bzChart'),{
+    type:'line',
+    data:{labels:[],datasets:[
+      {label:'BZ',data:[],borderColor:'#0a84ff',backgroundColor:'rgba(10,132,255,0.05)',pointBackgroundColor:[],pointBorderColor:[],pointRadius:5,tension:0.4,fill:true,borderWidth:2},
+      {label:'Max',data:[],borderColor:'rgba(255,69,58,0.3)',borderDash:[5,5],pointRadius:0,fill:false,borderWidth:1},
+      {label:'Min',data:[],borderColor:'rgba(255,159,10,0.3)',borderDash:[5,5],pointRadius:0,fill:false,borderWidth:1}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.dataset.label==='BZ'?ctx.parsed.y+' mg/dL':null},backgroundColor:'rgba(19,19,26,0.95)',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#f0f0f5',bodyColor:'#8888a0',padding:10}},scales:{y:{min:40,suggestedMax:230,grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:11},color:'#55556a'}},x:{grid:{display:false},ticks:{font:{size:11},color:'#55556a'}}}}
+  });
+}
+
+function updateChart(){
+  const labels=bzData.map(e=>e.time),vals=bzData.map(e=>e.val);
+  const ptC=vals.map(v=>v<TL?'#ff9f0a':v>=TH?'#ff453a':'#30d158');
+  chart.data.labels=labels;
+  chart.data.datasets[0].data=vals;
+  chart.data.datasets[0].pointBackgroundColor=ptC;
+  chart.data.datasets[0].pointBorderColor=ptC;
+  chart.data.datasets[1].data=labels.map(()=>TH);
+  chart.data.datasets[2].data=labels.map(()=>TL);
+  chart.update();
+}
+
+// ============================================================
+// MAHLZEITEN
+// ============================================================
+function liveCalc(){
+  const kh=parseFloat(document.getElementById('meal-kh').value)||0;
+  const pr=parseFloat(document.getElementById('meal-pr').value)||0;
+  const fat=parseFloat(document.getElementById('meal-fat').value)||0;
+  if(!kh&&!pr&&!fat){document.getElementById('meal-calc').style.display='none';return;}
+  const kcal=Math.round(kh*4+pr*4+fat*9);
+  const be=Math.round((kh/12)*10)/10,ke=Math.round((kh/10)*10)/10;
+  document.getElementById('c-kcal').textContent=kcal+' kcal';
+  document.getElementById('c-be').textContent=be.toFixed(1)+' BE';
+  document.getElementById('c-ke').textContent=ke.toFixed(1)+' KE';
+  document.getElementById('c-ins').textContent=(Math.round(be*0.5*10)/10)+' – '+(Math.round(be*2*10)/10)+' IE';
+  document.getElementById('meal-calc').style.display='block';
+}
+
+function addMeal(){
+  const n=document.getElementById('meal-name').value.trim();
+  if(!n)return;
+  const kh=parseFloat(document.getElementById('meal-kh').value)||0;
+  const pr=parseFloat(document.getElementById('meal-pr').value)||0;
+  const fat=parseFloat(document.getElementById('meal-fat').value)||0;
+  mealData.push({time:nowStr(),name:n,kh,pr,fat,kcal:Math.round(kh*4+pr*4+fat*9),be:Math.round((kh/12)*10)/10});
+  ['meal-name','meal-kh','meal-pr','meal-fat'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('meal-calc').style.display='none';
+  renderMeals();
+}
+
+function renderMeals(){
+  const tb=document.getElementById('meal-body');
+  if(!mealData.length){tb.innerHTML='<tr><td colspan="7" style="color:var(--sub);text-align:center;padding:3rem">Noch keine Einträge</td></tr>';return;}
+  tb.innerHTML=[...mealData].reverse().map(e=>`<tr><td style="color:var(--mut)">${e.time}</td><td style="font-weight:500">${e.name}</td><td>${e.kh}g</td><td style="color:var(--or);font-weight:500">${e.be.toFixed(1)}</td><td>${e.pr}g</td><td>${e.fat}g</td><td style="color:var(--mut)">${e.kcal}</td></tr>`).join('');
+}
+
+// ============================================================
+// HBA1C
+// ============================================================
+function updateHbA1c(){
+  const empty=document.getElementById('hba1c-empty'),res=document.getElementById('hba1c-result');
+  if(bzData.length<3){empty.style.display='block';res.style.display='none';return;}
+  empty.style.display='none';res.style.display='block';
+  const vals=bzData.map(e=>e.val),avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  const hba1c=(avg+46.7)/28.7,hr=Math.round(hba1c*10)/10;
+  document.getElementById('hba1c-val').textContent=hr.toFixed(1);
+  document.getElementById('hba1c-avg').textContent=Math.round(avg)+' mg/dL';
+  document.getElementById('hba1c-n').textContent=bzData.length+' Messungen';
+  document.getElementById('hba1c-eag').textContent=Math.round(28.7*hba1c-46.7)+' mg/dL';
+  const pct=Math.min(100,Math.max(0,((hba1c-4)/6)*100));
+  document.getElementById('hba1c-bar').style.width=pct+'%';
+  let bCls,bLabel,barCol,trend;
+  if(hba1c<5.7){bCls='b-ok';bLabel='Optimal';barCol='#30d158';trend='Sehr gut';}
+  else if(hba1c<6.5){bCls='b-warn';bLabel='Erhöht';barCol='#ff9f0a';trend='Grenzwertig';}
+  else{bCls='b-crit';bLabel='Hoch';barCol='#ff453a';trend='Arztbesuch empfohlen';}
+  document.getElementById('hba1c-bar').style.background=barCol;
+  const b=document.getElementById('hba1c-badge');b.className='bdg '+bCls;b.textContent=bLabel;
+  document.getElementById('hba1c-trend').textContent=trend;
+  document.getElementById('hba1c-trend').style.color=barCol;
+}
+
+// ============================================================
+// CSV EXPORT
+// ============================================================
+function exportCSV(){
+  if(!bzData.length&&!mealData.length){alert('Keine Daten vorhanden.');return;}
+  let csv='Typ,Zeit,Wert/Mahlzeit,KH,BE,Protein,Fett,kcal,Status\n';
+  bzData.forEach(e=>{const s=getStatus(e.val);csv+=`Blutzucker,${e.time},${e.val} mg/dL,,,,,${s.label},"${e.note||''}"\n`;});
+  mealData.forEach(e=>{csv+=`Mahlzeit,${e.time},"${e.name}",${e.kh}g,${e.be} BE,${e.pr}g,${e.fat}g,${e.kcal} kcal,\n`;});
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download='gluco-protokoll.csv';a.click();
+}
+
+// ============================================================
+// REMINDERS
+// ============================================================
+function renderReminders(){
+  document.getElementById('reminder-list').innerHTML=defaultRems.map(r=>`
+    <div class="rem-item">
+      <div class="rem-ico" style="background:${r.bg};color:${r.color}">${r.icon}</div>
+      <div class="rem-inf">
+        <div class="rem-n">${r.name}</div>
+        <input type="time" class="tinput" value="${r.time}" onchange="updateRemTime('${r.id}',this.value)">
+      </div>
+      <label class="tog"><input type="checkbox" ${r.on?'checked':''} onchange="toggleRem('${r.id}',this.checked)"><span class="tslider"></span></label>
+    </div>`).join('');
+}
+
+function updateRemTime(id,val){const r=defaultRems.find(r=>r.id===id);if(r){r.time=val;if(r.on)schedRem(r);}}
+function toggleRem(id,on){const r=defaultRems.find(r=>r.id===id);if(r){r.on=on;if(on)schedRem(r);}}
+
+function schedRem(r){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  const [h,m]=r.time.split(':').map(Number);
+  const now=new Date(),t=new Date();
+  t.setHours(h,m,0,0);
+  if(t<=now)t.setDate(t.getDate()+1);
+  setTimeout(()=>{new Notification('Gluco',{body:r.name+' — Zeit für deine Messung.'});},t-now);
+}
+
+async function requestNotif(){
+  if(typeof Notification==='undefined'){alert('Nicht unterstützt.');return;}
+  const p=await Notification.requestPermission();
+  if(p==='granted'){
+    document.getElementById('notif-banner').classList.add('show');
+    const btn=document.getElementById('notif-btn');btn.textContent='Aktiv ✓';btn.disabled=true;
+    defaultRems.filter(r=>r.on).forEach(r=>schedRem(r));
+  }
+}
+
+function addCustomRem(){
+  const name=document.getElementById('rem-name').value.trim();
+  const time=document.getElementById('rem-time-inp').value;
+  if(!name||!time)return;
+  customRems.push({id:'c'+Date.now(),name,time});
+  document.getElementById('rem-name').value='';document.getElementById('rem-time-inp').value='';
+  renderCustomRems();
+}
+
+function renderCustomRems(){
+  const list=document.getElementById('custom-rem-list');
+  if(!customRems.length){list.innerHTML='';return;}
+  list.innerHTML=customRems.map(r=>`
+    <div class="rem-item">
+      <div class="rem-ico" style="background:var(--bl-d);color:var(--bl)">◆</div>
+      <div class="rem-inf"><div class="rem-n">${r.name}</div><div style="font-size:12px;color:var(--mut);margin-top:3px">${r.time} Uhr</div></div>
+      <button class="btn btn-g" style="font-size:11px;padding:6px 12px" onclick="delCustomRem('${r.id}')">Entfernen</button>
+    </div>`).join('');
+}
+function delCustomRem(id){customRems=customRems.filter(r=>r.id!==id);renderCustomRems();}
+
+// ============================================================
+// RECIPES
+// ============================================================
+function selRecipeCat(cat,el){
+  recipeCat=cat;
+  document.querySelectorAll('.rcat').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+async function loadRecipes(){
+  const catDesc={
+    low:'niedrigem Blutzucker unter 80 mg/dL. Rezepte liefern schnelle Glukose und stabilisieren — kleine Mengen schneller KH kombiniert mit Protein und Fett.',
+    mid:'normalem Blutzucker 80–160 mg/dL. Ausgewogene Rezepte: komplexe KH mit niedrigem GI, viel Protein, gesunde Fette, hoher Ballaststoffanteil.',
+    high:'erhöhtem Blutzucker über 160 mg/dL. Rezepte sehr kohlenhydratarm, ballaststoffreich, niedriger glykämischer Index.'
+  };
+  document.getElementById('recipe-output').innerHTML='';
+  document.getElementById('recipe-loading').style.display='block';
+  try{
+    const res=await callAPI(`Du bist Ernährungsberater für Diabetiker. Erstelle genau 5 Rezepte für Diabetiker mit ${catDesc[recipeCat]}\n\nNUR JSON-Array, keine Backticks:\n[{"name":"...","desc":"...","kal":0,"kh":0,"protein":0,"fett":0,"ballaststoffe":0,"schritte":["...","...","..."]}]`,2000);
+    const recipes=JSON.parse(res);
+    document.getElementById('recipe-loading').style.display='none';
+    document.getElementById('recipe-output').innerHTML=recipes.map((r,i)=>`
+      <div class="rcard">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+          <div class="rcard-n">${r.name}</div>
+          <span style="font-size:11px;color:var(--sub);margin-left:10px;margin-top:3px;flex-shrink:0">${i+1}/5</span>
+        </div>
+        <div class="rcard-d">${r.desc}</div>
+        <div class="mpills">
+          <span class="mpill mp-kcal">${r.kal} kcal</span>
+          <span class="mpill mp-kh">KH ${r.kh}g</span>
+          <span class="mpill mp-pr">Protein ${r.protein}g</span>
+          <span class="mpill mp-fat">Fett ${r.fett}g</span>
+          <span class="mpill mp-bs">Ballaststoffe ${r.ballaststoffe}g</span>
+        </div>
+        <div class="rcard-steps"><ol>${(r.schritte||[]).map(s=>`<li>${s}</li>`).join('')}</ol></div>
+      </div>`).join('');
+  }catch(e){
+    document.getElementById('recipe-loading').style.display='none';
+    document.getElementById('recipe-output').innerHTML='<div class="card" style="color:var(--rd)">Fehler beim Generieren. Bitte erneut versuchen.</div>';
+  }
+}
+
+// ============================================================
+// OPTIMIZER
+// ============================================================
+async function genPlan(){
+  const cur=parseFloat(document.getElementById('opt-cur').value);
+  const tgt=parseFloat(document.getElementById('opt-tgt').value);
+  const typ=document.getElementById('opt-typ').value;
+  const act=document.getElementById('opt-act').value;
+  const agg=parseInt(document.getElementById('opt-agg').value);
+
+  if(!cur||cur<4||cur>14){alert('Bitte gültigen aktuellen HbA1c eingeben (4–14%).');return;}
+  if(!tgt||tgt<4||tgt>14){alert('Bitte gültiges Ziel eingeben (4–14%).');return;}
+  if(tgt>=cur){alert('Das Ziel muss niedriger als der aktuelle Wert sein.');return;}
+
+  const btn=document.getElementById('opt-btn');btn.disabled=true;
+  document.getElementById('opt-output').style.display='none';
+  document.getElementById('opt-loading').style.display='block';
+
+  const msgs=['KI analysiert deine Werte...','Ernährungsmuster werden berechnet...','Mahlzeiten werden optimiert...','Tagesplan wird zusammengestellt...'];
+  let mi=0;
+  const intv=setInterval(()=>{mi=(mi+1)%msgs.length;document.getElementById('opt-load-msg').textContent=msgs[mi];},1800);
+
+  const aggLbl=['sanfte','moderate','intensive'];
+  const prompt=`Ernährungsberater für Diabetiker. Optimierter Tagesplan mit exakt 3 Mahlzeiten.
+Aktueller HbA1c: ${cur}%, Ziel: ${tgt}%, Typ: ${typ}, Aktivität: ${act}, Intensität: ${aggLbl[agg-1]}
+Nur JSON ohne Backticks:
+{"summary":"2-3 Sätze zur Eignung","estimated_weeks":Zahl,"daily_tip":"1 Alltagstipp","meals":[{"time":"Frühstück","time_icon":"○","name":"...","desc":"...","kcal":0,"kh":0,"protein":0,"fett":0,"ballaststoffe":0,"gi":"niedrig","schritte":["...","...","..."]}],"tips":["...","...","..."]}`;
+
+  try{
+    const raw=await callAPI(prompt,2200);
+    const plan=JSON.parse(raw);
+    clearInterval(intv);
+    document.getElementById('opt-loading').style.display='none';
+
+    // Progress bars
+    const toW=v=>Math.min(100,Math.max(0,((v-4)/6)*100));
+    document.getElementById('prog-cur').textContent=cur+'%';
+    document.getElementById('prog-tgt').textContent=tgt+'%';
+    document.getElementById('pbar-tgt').style.width=toW(cur)+'%';
+    document.getElementById('pbar-cur').style.width=toW(tgt)+'%';
+    document.getElementById('prog-summary').textContent=plan.summary||'';
+    const weeks=plan.estimated_weeks||12;
+    document.getElementById('prog-weeks').innerHTML=`<div style="font-size:11px;color:var(--mut);margin-bottom:3px">Geschätzte Dauer</div><div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--gr)">${weeks} Wochen</div>`;
+
+    const tCols={'Frühstück':'rgba(255,159,10,0.12)','Mittagessen':'rgba(48,209,88,0.12)','Abendessen':'rgba(10,132,255,0.12)'};
+    const tTxt={'Frühstück':'var(--or)','Mittagessen':'var(--gr)','Abendessen':'var(--bl)'};
+    const giPillBg={'niedrig':'var(--gr-d)','mittel':'var(--or-d)','hoch':'var(--rd-d)'};
+    const giPillC={'niedrig':'var(--gr)','mittel':'var(--or)','hoch':'var(--rd)'};
+
+    let tKcal=0,tKh=0,tPr=0,tFat=0,tBs=0;
+    document.getElementById('meals-grid').innerHTML=(plan.meals||[]).map(m=>{
+      tKcal+=m.kcal||0;tKh+=m.kh||0;tPr+=m.protein||0;tFat+=m.fett||0;tBs+=m.ballaststoffe||0;
+      const mx=Math.max(m.kh,m.protein,m.fett,1);
+      return`<div class="mcrd">
+        <div class="mt-bdg" style="background:${tCols[m.time]||'rgba(255,255,255,.08)'};color:${tTxt[m.time]||'var(--mut)'}">${m.time_icon||'○'} ${m.time}</div>
+        <div style="font-size:14px;font-weight:500;margin-bottom:4px;line-height:1.4">${m.name}</div>
+        <div style="font-size:11px;color:var(--mut);margin-bottom:10px;line-height:1.55">${m.desc}</div>
+        <div style="margin-bottom:10px">
+          ${[['KH',m.kh,'var(--or)'],['Protein',m.protein,'var(--bl)'],['Fett',m.fett,'var(--mut)']].map(([l,v,c])=>`
+          <div class="mbar-row">
+            <span class="mbar-lbl">${l}</span>
+            <div class="mbar-trk"><div class="mbar-fill" style="width:${Math.round((v/mx)*100)}%;background:${c}"></div></div>
+            <span class="mbar-v" style="color:${c}">${v}g</span>
+          </div>`).join('')}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">
+          <span style="background:var(--pu-d);color:var(--pu);font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px">${m.kcal} kcal</span>
+          <span style="background:var(--gr-d);color:var(--gr);font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px">Bs ${m.ballaststoffe}g</span>
+          <span style="background:${giPillBg[m.gi]||'var(--s3)'};color:${giPillC[m.gi]||'var(--mut)'};font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px">GI ${m.gi||'—'}</span>
+        </div>
+        <div style="border-top:1px solid var(--bdr);padding-top:10px">
+          <div style="font-size:10px;font-weight:600;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Zubereitung</div>
+          <ol style="padding-left:1.1rem">${(m.schritte||[]).map(s=>`<li style="font-size:11px;color:var(--mut);line-height:1.6;margin-bottom:3px">${s}</li>`).join('')}</ol>
+        </div>
+      </div>`;
+    }).join('');
+
+    document.getElementById('day-grid').innerHTML=[
+      ['Kalorien',Math.round(tKcal),'','var(--pu)'],
+      ['Kohlenhydrate',Math.round(tKh),'g','var(--or)'],
+      ['Protein',Math.round(tPr),'g','var(--bl)'],
+      ['Fett',Math.round(tFat),'g','var(--mut)'],
+      ['Ballaststoffe',Math.round(tBs),'g','var(--gr)'],
+    ].map(([l,v,u,c])=>`<div class="day-item"><div class="day-v" style="color:${c}">${v}${u}</div><div class="day-l">${l}</div></div>`).join('');
+
+    document.getElementById('tips-box').innerHTML=`
+      <div class="tips-t">Persönliche Optimierungstipps</div>
+      <div>${(plan.tips||[]).map(t=>`<div class="tip-item"><div class="tip-dot"></div><p>${t}</p></div>`).join('')}
+      ${plan.daily_tip?`<div class="tip-item"><div class="tip-dot"></div><p><strong>Tipp des Tages:</strong> ${plan.daily_tip}</p></div>`:''}</div>`;
+
+    document.getElementById('opt-output').style.display='block';
+  }catch(e){
+    clearInterval(intv);
+    document.getElementById('opt-loading').style.display='none';
+    alert('Fehler beim Generieren. Bitte erneut versuchen.');
+  }finally{
+    btn.disabled=false;
+    document.getElementById('opt-btn-txt').textContent='Neuen Plan generieren →';
+  }
+}
+
+// ============================================================
+// GI DATENBANK — all functions use unique names to avoid conflicts
+// ============================================================
+function giColorFor(val){if(val<=55)return'var(--gr)';if(val<=69)return'var(--or)';return'var(--rd)';}
+function glColorFor(val){if(val<=10)return'var(--gr)';if(val<=19)return'var(--or)';return'var(--rd)';}
+function giLabelFor(val){
+  if(val<=55)return{text:'Niedrig',bg:'var(--gr-d)',color:'var(--gr)'};
+  if(val<=69)return{text:'Mittel',bg:'var(--or-d)',color:'var(--or)'};
+  return{text:'Hoch',bg:'var(--rd-d)',color:'var(--rd)'};
+}
+function glLabelFor(val){
+  if(val<=10)return{text:'Niedrig',bg:'var(--gr-d)',color:'var(--gr)'};
+  if(val<=19)return{text:'Mittel',bg:'var(--or-d)',color:'var(--or)'};
+  return{text:'Hoch',bg:'var(--rd-d)',color:'var(--rd)'};
+}
+function empBadge(e){
+  if(e==='gut')return`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--gr-d);color:var(--gr)">✓ Gut</span>`;
+  if(e==='mittel')return`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--or-d);color:var(--or)">~ Mit Maß</span>`;
+  return`<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--rd-d);color:var(--rd)">✕ Meiden</span>`;
+}
+
+function giQuick(term){document.getElementById('gi-input').value=term;doGISearch();}
+
+async function doGISearch(){
+  const q=document.getElementById('gi-input').value.trim();
+  if(!q)return;
+  const btn=document.getElementById('gi-btn');btn.disabled=true;
+  document.getElementById('gi-output').style.display='none';
+  document.getElementById('gi-loading').style.display='block';
+
+  const prompt=`Nährwert-Datenbank. Suche: "${q}". Nur JSON ohne Backticks:
+{"searched":{"name":"Lebensmittelname Deutsch","category":"Kategorie","gi":Zahl,"kh_per_100g":Zahl,"gl_per_100g":Zahl,"portion_typical_g":Zahl},"similar":[{"name":"...","gi":Zahl,"kh_per_100g":Zahl,"gl_per_100g":Zahl,"empfehlung":"gut|mittel|vermeiden","hinweis":"max 8 Wörter"}]}
+Genau 9 ähnliche Lebensmittel (inkl. gesuchtes als erstes). Wissenschaftlich belegte GI-Werte.`;
+
+  try{
+    const raw=await callAPI(prompt,1400);
+    const result=JSON.parse(raw);
+    document.getElementById('gi-loading').style.display='none';
+    giFood=result.searched;
+    giSimilar=result.similar||[];
+    renderGIHero();
+    renderGITable();
+    document.getElementById('gi-output').style.display='block';
+  }catch(e){
+    document.getElementById('gi-loading').style.display='none';
+    alert('Fehler beim Laden. Bitte erneut versuchen.');
+  }finally{
+    btn.disabled=false;
+  }
+}
+
+function renderGIHero(){
+  const f=giFood;
+  document.getElementById('gi-fname').textContent=f.name;
+  document.getElementById('gi-fcat').textContent=f.category;
+  document.getElementById('gi-num-gi').textContent=f.gi;
+  document.getElementById('gi-num-gl').textContent=(f.gl_per_100g||0).toFixed(1);
+  document.getElementById('gi-kh100').textContent=f.kh_per_100g+'g';
+  document.getElementById('gi-portion').value=f.portion_typical_g||100;
+  document.getElementById('gbar-gi').style.width=Math.min(100,f.gi)+'%';
+  document.getElementById('gbar-gi').style.background=giColorFor(f.gi);
+  document.getElementById('gbar-gl').style.width=Math.min(100,(f.gl_per_100g||0)*2.5)+'%';
+  document.getElementById('gbar-gl').style.background=glColorFor(f.gl_per_100g||0);
+  const gl=giLabelFor(f.gi),gll=glLabelFor(f.gl_per_100g||0);
+  document.getElementById('gi-bdg-gi').innerHTML=`<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${gl.bg};color:${gl.color}">${gl.text}</span>`;
+  document.getElementById('gi-bdg-gl').innerHTML=`<span style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:${gll.bg};color:${gll.color}">${gll.text}</span>`;
+  document.getElementById('gi-tbl-title').textContent=`Ähnliche Lebensmittel — ${f.category}`;
+  recalcGlPortion();
+}
+
+function recalcGlPortion(){
+  if(!giFood)return;
+  const por=Math.max(1,parseFloat(document.getElementById('gi-portion').value)||100);
+  const gl=Math.round((giFood.gi*(giFood.kh_per_100g||0)*por)/10000*10)/10;
+  const el=document.getElementById('gi-gl-por');
+  el.textContent=gl.toFixed(1);
+  el.style.color=glColorFor(gl);
+}
+
+function giSort(key,btn){
+  if(giSortKey===key){giSortDir*=-1;}else{giSortKey=key;giSortDir=1;}
+  document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderGITable();
+}
+
+function renderGITable(){
+  if(!giSimilar.length)return;
+  const sorted=[...giSimilar].sort((a,b)=>{
+    const kmap={gi:'gi',gl:'gl_per_100g',kh:'kh_per_100g',name:'name'};
+    const k=kmap[giSortKey]||'gi';
+    const av=a[k]||0,bv=b[k]||0;
+    if(typeof av==='string')return giSortDir*av.localeCompare(bv);
+    return giSortDir*(av-bv);
+  });
+  const maxGI=Math.max(...giSimilar.map(r=>r.gi||0),1);
+  const maxGL=Math.max(...giSimilar.map(r=>r.gl_per_100g||0),1);
+  const hn=(giFood?giFood.name:'').toLowerCase();
+  document.getElementById('gi-tbody').innerHTML=sorted.map(row=>{
+    const isHL=row.name.toLowerCase()===hn;
+    const gl=giLabelFor(row.gi||0),gll=glLabelFor(row.gl_per_100g||0);
+    return`<tr class="${isHL?'ghl':''}">
+      <td style="font-weight:${isHL?500:400}">${row.name}${isHL?` <span style="font-size:10px;color:var(--gr);margin-left:4px">← Suche</span>`:''}</td>
+      <td>
+        <div class="gbar-row">
+          <div class="gbar-mini"><div class="gbar-mini-fill" style="width:${Math.round(((row.gi||0)/maxGI)*100)}%;background:${giColorFor(row.gi||0)}"></div></div>
+          <span style="font-weight:500;color:${giColorFor(row.gi||0)}">${row.gi||0}</span>
+        </div>
+      </td>
+      <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${gl.bg};color:${gl.color}">${gl.text}</span></td>
+      <td style="color:var(--mut)">${row.kh_per_100g||0}g</td>
+      <td>
+        <div class="gbar-row">
+          <div class="gbar-mini"><div class="gbar-mini-fill" style="width:${Math.round(((row.gl_per_100g||0)/maxGL)*100)}%;background:${glColorFor(row.gl_per_100g||0)}"></div></div>
+          <span style="font-weight:500;color:${glColorFor(row.gl_per_100g||0)}">${(row.gl_per_100g||0).toFixed(1)}</span>
+        </div>
+      </td>
+      <td><span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;background:${gll.bg};color:${gll.color}">${gll.text}</span></td>
+      <td>${empBadge(row.empfehlung)}<div style="font-size:10px;color:var(--sub);margin-top:3px">${row.hinweis||''}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ============================================================
+// API HELPER — single function, no naming conflicts
+// ============================================================
+async function callAPI(prompt,maxTokens){
+  const res=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:maxTokens||1000,
+      messages:[{role:'user',content:prompt}]
+    })
+  });
+  if(!res.ok)throw new Error('API error '+res.status);
+  const data=await res.json();
+  if(data.error)throw new Error(data.error.message);
+  const raw=data.content.map(c=>c.text||'').join('');
+  return raw.replace(/```json|```/g,'').trim();
+}
+</script>
+</body>
+</html>
