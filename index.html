@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gluco — Diabetes Dashboard</title>
+<title>More Health — Diabetes Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -251,7 +251,7 @@ table.gtbl tr.ghl td{background:rgba(48,209,88,.04)}
 
 <div class="hdr">
   <div class="hdr-l">
-    <h1>Gluco</h1>
+    <h1>More Health</h1>
     <p>Persönliches Diabetes-Protokoll</p>
   </div>
   <div class="hdr-r" id="hdr-date"></div>
@@ -823,35 +823,44 @@ function selRecipeCat(cat,el){
 
 async function loadRecipes(){
   const catDesc={
-    low:'niedrigem Blutzucker unter 80 mg/dL. Rezepte liefern schnelle Glukose und stabilisieren — kleine Mengen schneller KH kombiniert mit Protein und Fett.',
-    mid:'normalem Blutzucker 80–160 mg/dL. Ausgewogene Rezepte: komplexe KH mit niedrigem GI, viel Protein, gesunde Fette, hoher Ballaststoffanteil.',
-    high:'erhöhtem Blutzucker über 160 mg/dL. Rezepte sehr kohlenhydratarm, ballaststoffreich, niedriger glykämischer Index.'
+    low:'niedrigem Blutzucker unter 80 mg/dL (Hypoglykämie). Kleine Mengen schneller Kohlenhydrate kombiniert mit Protein und Fett zur Stabilisierung.',
+    mid:'normalem Blutzucker 80–160 mg/dL. Ausgewogen: komplexe KH mit niedrigem GI, viel Protein, gesunde Fette, viele Ballaststoffe.',
+    high:'erhöhtem Blutzucker über 160 mg/dL. Sehr kohlenhydratarm, ballaststoffreich, niedriger glykämischer Index.'
   };
   document.getElementById('recipe-output').innerHTML='';
   document.getElementById('recipe-loading').style.display='block';
+  const prompt=`Ernährungsberater für Diabetiker. Erstelle exakt 3 Rezepte für Diabetiker mit ${catDesc[recipeCat]}
+Antworte AUSSCHLIESSLICH mit einem JSON-Array. Kein Text davor oder danach. Kein Markdown. Nur reines JSON:
+[{"name":"Rezeptname","desc":"Warum geeignet","kal":350,"kh":30,"protein":25,"fett":12,"ballaststoffe":8,"schritte":["Schritt 1","Schritt 2","Schritt 3"]},{"name":"...","desc":"...","kal":0,"kh":0,"protein":0,"fett":0,"ballaststoffe":0,"schritte":["..."]},{"name":"...","desc":"...","kal":0,"kh":0,"protein":0,"fett":0,"ballaststoffe":0,"schritte":["..."]}]`;
   try{
-    const res=await callAPI(`Du bist Ernährungsberater für Diabetiker. Erstelle genau 5 Rezepte für Diabetiker mit ${catDesc[recipeCat]}\n\nNUR JSON-Array, keine Backticks:\n[{"name":"...","desc":"...","kal":0,"kh":0,"protein":0,"fett":0,"ballaststoffe":0,"schritte":["...","...","..."]}]`,2000);
-    const recipes=JSON.parse(res);
+    const raw=await callAPI(prompt,1500);
+    const recipes=JSON.parse(raw);
+    if(!Array.isArray(recipes)||recipes.length===0) throw new Error('Leeres Ergebnis');
     document.getElementById('recipe-loading').style.display='none';
     document.getElementById('recipe-output').innerHTML=recipes.map((r,i)=>`
       <div class="rcard">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
-          <div class="rcard-n">${r.name}</div>
-          <span style="font-size:11px;color:var(--sub);margin-left:10px;margin-top:3px;flex-shrink:0">${i+1}/5</span>
+          <div class="rcard-n">${r.name||'Rezept '+(i+1)}</div>
+          <span style="font-size:11px;color:var(--sub);margin-left:10px;margin-top:3px;flex-shrink:0">${i+1}/3</span>
         </div>
-        <div class="rcard-d">${r.desc}</div>
+        <div class="rcard-d">${r.desc||''}</div>
         <div class="mpills">
-          <span class="mpill mp-kcal">${r.kal} kcal</span>
-          <span class="mpill mp-kh">KH ${r.kh}g</span>
-          <span class="mpill mp-pr">Protein ${r.protein}g</span>
-          <span class="mpill mp-fat">Fett ${r.fett}g</span>
-          <span class="mpill mp-bs">Ballaststoffe ${r.ballaststoffe}g</span>
+          <span class="mpill mp-kcal">${r.kal||0} kcal</span>
+          <span class="mpill mp-kh">KH ${r.kh||0}g</span>
+          <span class="mpill mp-pr">Protein ${r.protein||0}g</span>
+          <span class="mpill mp-fat">Fett ${r.fett||0}g</span>
+          <span class="mpill mp-bs">Ballaststoffe ${r.ballaststoffe||0}g</span>
         </div>
         <div class="rcard-steps"><ol>${(r.schritte||[]).map(s=>`<li>${s}</li>`).join('')}</ol></div>
       </div>`).join('');
   }catch(e){
     document.getElementById('recipe-loading').style.display='none';
-    document.getElementById('recipe-output').innerHTML='<div class="card" style="color:var(--rd)">Fehler beim Generieren. Bitte erneut versuchen.</div>';
+    document.getElementById('recipe-output').innerHTML=`<div class="card" style="color:var(--rd);font-size:13px;line-height:1.6">
+      <strong>Fehler beim Generieren.</strong><br>
+      Mögliche Ursache: Netzwerkproblem oder CORS-Sperre.<br>
+      Bitte erneut versuchen oder Seite neu laden.<br>
+      <span style="font-size:11px;color:var(--sub);margin-top:6px;display:block">Details: ${e.message}</span>
+    </div>`;
   }
 }
 
@@ -878,14 +887,15 @@ async function genPlan(){
   const intv=setInterval(()=>{mi=(mi+1)%msgs.length;document.getElementById('opt-load-msg').textContent=msgs[mi];},1800);
 
   const aggLbl=['sanfte','moderate','intensive'];
-  const prompt=`Ernährungsberater für Diabetiker. Optimierter Tagesplan mit exakt 3 Mahlzeiten.
-Aktueller HbA1c: ${cur}%, Ziel: ${tgt}%, Typ: ${typ}, Aktivität: ${act}, Intensität: ${aggLbl[agg-1]}
-Nur JSON ohne Backticks:
-{"summary":"2-3 Sätze zur Eignung","estimated_weeks":Zahl,"daily_tip":"1 Alltagstipp","meals":[{"time":"Frühstück","time_icon":"○","name":"...","desc":"...","kcal":0,"kh":0,"protein":0,"fett":0,"ballaststoffe":0,"gi":"niedrig","schritte":["...","...","..."]}],"tips":["...","...","..."]}`;
+  const prompt=`Ernährungsberater für Diabetiker. Tagesplan mit exakt 3 Mahlzeiten für HbA1c-Optimierung.
+Daten: HbA1c aktuell ${cur}%, Ziel ${tgt}%, Typ: ${typ}, Aktivität: ${act}, Intensität: ${aggLbl[agg-1]}.
+Antworte AUSSCHLIESSLICH mit folgendem JSON. Kein Text davor oder danach. Kein Markdown:
+{"summary":"2 Sätze warum dieser Plan geeignet ist","estimated_weeks":12,"daily_tip":"1 konkreter Tipp","meals":[{"time":"Frühstück","time_icon":"○","name":"Rezeptname","desc":"Kurze Begründung","kcal":350,"kh":30,"protein":25,"fett":12,"ballaststoffe":8,"gi":"niedrig","schritte":["Schritt 1","Schritt 2","Schritt 3"]},{"time":"Mittagessen","time_icon":"◑","name":"...","desc":"...","kcal":500,"kh":40,"protein":35,"fett":18,"ballaststoffe":10,"gi":"niedrig","schritte":["...","...","..."]},{"time":"Abendessen","time_icon":"●","name":"...","desc":"...","kcal":420,"kh":25,"protein":38,"fett":15,"ballaststoffe":9,"gi":"niedrig","schritte":["...","...","..."]}],"tips":["Tipp 1","Tipp 2","Tipp 3"]}`;
 
   try{
     const raw=await callAPI(prompt,2200);
     const plan=JSON.parse(raw);
+    if(!plan.meals||!Array.isArray(plan.meals)||plan.meals.length===0) throw new Error('Keine Mahlzeiten in der Antwort');
     clearInterval(intv);
     document.getElementById('opt-loading').style.display='none';
 
@@ -949,7 +959,13 @@ Nur JSON ohne Backticks:
   }catch(e){
     clearInterval(intv);
     document.getElementById('opt-loading').style.display='none';
-    alert('Fehler beim Generieren. Bitte erneut versuchen.');
+    document.getElementById('opt-output').innerHTML=`<div class="card" style="color:var(--rd);font-size:13px;line-height:1.6">
+      <strong>Fehler beim Generieren.</strong><br>
+      Mögliche Ursache: Netzwerkproblem oder CORS-Sperre.<br>
+      Bitte erneut versuchen oder Seite neu laden.<br>
+      <span style="font-size:11px;color:var(--sub);margin-top:6px;display:block">Details: ${e.message}</span>
+    </div>`;
+    document.getElementById('opt-output').style.display='block';
   }finally{
     btn.disabled=false;
     document.getElementById('opt-btn-txt').textContent='Neuen Plan generieren →';
@@ -986,9 +1002,10 @@ async function doGISearch(){
   document.getElementById('gi-output').style.display='none';
   document.getElementById('gi-loading').style.display='block';
 
-  const prompt=`Nährwert-Datenbank. Suche: "${q}". Nur JSON ohne Backticks:
-{"searched":{"name":"Lebensmittelname Deutsch","category":"Kategorie","gi":Zahl,"kh_per_100g":Zahl,"gl_per_100g":Zahl,"portion_typical_g":Zahl},"similar":[{"name":"...","gi":Zahl,"kh_per_100g":Zahl,"gl_per_100g":Zahl,"empfehlung":"gut|mittel|vermeiden","hinweis":"max 8 Wörter"}]}
-Genau 9 ähnliche Lebensmittel (inkl. gesuchtes als erstes). Wissenschaftlich belegte GI-Werte.`;
+  const prompt=`Nährwert-Datenbank für Diabetiker. Suche nach: "${q}".
+Antworte AUSSCHLIESSLICH mit folgendem JSON. Kein Text davor oder danach. Kein Markdown:
+{"searched":{"name":"Lebensmittelname auf Deutsch","category":"Kategorie z.B. Getreideprodukt","gi":55,"kh_per_100g":48,"gl_per_100g":26.4,"portion_typical_g":50},"similar":[{"name":"Lebensmittel 1","gi":50,"kh_per_100g":45,"gl_per_100g":22.5,"empfehlung":"gut","hinweis":"Wenig KH, gute Wahl"},{"name":"Lebensmittel 2","gi":65,"kh_per_100g":50,"gl_per_100g":32.5,"empfehlung":"mittel","hinweis":"Mit Maß genießen"},{"name":"Lebensmittel 3","gi":72,"kh_per_100g":55,"gl_per_100g":39.6,"empfehlung":"vermeiden","hinweis":"Hoher GI meiden"}]}
+Gib genau 9 ähnliche Lebensmittel zurück (das gesuchte als erstes). Wissenschaftlich belegte GI-Werte aus den International Tables of GI.`;
 
   try{
     const raw=await callAPI(prompt,1400);
@@ -1001,7 +1018,11 @@ Genau 9 ähnliche Lebensmittel (inkl. gesuchtes als erstes). Wissenschaftlich be
     document.getElementById('gi-output').style.display='block';
   }catch(e){
     document.getElementById('gi-loading').style.display='none';
-    alert('Fehler beim Laden. Bitte erneut versuchen.');
+    document.getElementById('gi-output').innerHTML=`<div class="card" style="color:var(--rd);font-size:13px;line-height:1.6">
+      <strong>Fehler beim Laden.</strong><br>Bitte erneut versuchen.<br>
+      <span style="font-size:11px;color:var(--sub);margin-top:6px;display:block">Details: ${e.message}</span>
+    </div>`;
+    document.getElementById('gi-output').style.display='block';
   }finally{
     btn.disabled=false;
   }
@@ -1080,23 +1101,63 @@ function renderGITable(){
 }
 
 // ============================================================
-// API HELPER — single function, no naming conflicts
+// API HELPER — uses CORS proxy so it works from GitHub Pages
 // ============================================================
-async function callAPI(prompt,maxTokens){
-  const res=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514',
-      max_tokens:maxTokens||1000,
-      messages:[{role:'user',content:prompt}]
-    })
+async function callAPI(prompt, maxTokens) {
+  // Target Anthropic endpoint
+  const TARGET = 'https://api.anthropic.com/v1/messages';
+  // Public CORS proxies — tries each in order until one works
+  const PROXIES = [
+    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  ];
+
+  const body = JSON.stringify({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: maxTokens || 1000,
+    messages: [{ role: 'user', content: prompt }]
   });
-  if(!res.ok)throw new Error('API error '+res.status);
-  const data=await res.json();
-  if(data.error)throw new Error(data.error.message);
-  const raw=data.content.map(c=>c.text||'').join('');
-  return raw.replace(/```json|```/g,'').trim();
+
+  let lastErr;
+  for (const proxyFn of PROXIES) {
+    try {
+      const res = await fetch(proxyFn(TARGET), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.error) throw new Error(data.error.message || 'API error');
+      const raw = (data.content || []).map(c => c.text || '').join('');
+      return extractJSON(raw);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error('Alle Proxies fehlgeschlagen');
+}
+
+// Robustly extract the first valid JSON array or object from a string
+function extractJSON(str) {
+  // Strip markdown fences
+  str = str.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // Try direct parse first
+  try { JSON.parse(str); return str; } catch (_) {}
+  // Find first [ or { and try to parse from there
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '[' || str[i] === '{') {
+      const closer = str[i] === '[' ? ']' : '}';
+      // Find matching closer from end
+      for (let j = str.length - 1; j >= i; j--) {
+        if (str[j] === closer) {
+          const candidate = str.slice(i, j + 1);
+          try { JSON.parse(candidate); return candidate; } catch (_) {}
+        }
+      }
+    }
+  }
+  throw new Error('Kein gültiges JSON in der Antwort gefunden');
 }
 </script>
 </body>
