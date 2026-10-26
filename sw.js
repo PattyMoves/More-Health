@@ -1,5 +1,5 @@
 // Offline-Cache: App-Dateien werden beim ersten Besuch gespeichert
-const CACHE = 'more-health-v1';
+const CACHE = 'more-health-v2';
 const FILES = ['./', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png',
   ...['oats','ruehrei','joghurt','curry','lachs','pasta','bowl','omelett','kichererbsen','wrap','chili','quark'].map(n => `img/${n}.jpg`)];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES))); self.skipWaiting(); });

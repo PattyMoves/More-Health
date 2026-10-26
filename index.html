@@ -107,7 +107,7 @@ img{max-width:100%;display:block}
 .input:focus{border-color:var(--brand)}
 textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 .seg{display:flex;background:var(--surface-2);border-radius:14px;padding:4px;gap:4px}
-.seg button{flex:1;min-height:40px;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:14px;color:var(--ink-2)}
+.seg button{flex:1;white-space:nowrap;padding:0 10px;min-height:40px;border:0;border-radius:10px;background:transparent;font-weight:600;font-size:14px;color:var(--ink-2)}
 .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
 
 /* Heute */
@@ -135,13 +135,13 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--ink-3);pointer-events:none}
 .search-wrap .input{padding-left:44px}
 .results{display:flex;flex-direction:column;margin-top:8px;max-height:300px;overflow:auto;border-radius:var(--r-md)}
-.res{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 4px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%}
+.res{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%}
 .res:last-child{border-bottom:0}
 .res .n{font-weight:600}
 .res .m{font-size:13px;color:var(--ink-2)}
 .res .plus{width:32px;height:32px;border-radius:50%;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;font-size:20px;font-weight:600;flex-shrink:0}
 .items{display:flex;flex-direction:column}
-.item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .item:last-child{border-bottom:0}
 .item .n{font-weight:600;overflow-wrap:anywhere}
 .item .kh{font-size:13px;color:var(--carb);font-weight:600}
@@ -155,6 +155,29 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 .empty{text-align:center;padding:22px 10px;color:var(--ink-2)}
 .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
 
+.thumb{width:48px;height:48px;border-radius:12px;object-fit:cover;background:var(--surface-2);display:grid;place-items:center;font-weight:700;color:var(--ink-3);font-size:18px;overflow:hidden}
+.item .thumb{width:44px;height:44px}
+.repeat{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
+.repeat::-webkit-scrollbar{display:none}
+.repeat button{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-md);padding:10px 14px;text-align:left;max-width:200px}
+.repeat .n{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.repeat .k{font-size:12.5px;color:var(--carb);font-weight:600}
+.sos{display:flex;align-items:center;gap:12px;background:var(--surface);border:1.5px solid var(--line);border-radius:var(--r-md);padding:12px 14px;width:100%;text-align:left}
+.sos .ic{width:40px;height:40px;border-radius:12px;background:#FBE3E0;color:var(--danger);display:grid;place-items:center;flex-shrink:0}
+.sos .ic svg{width:22px;height:22px}
+.plan-text{white-space:pre-wrap;font-size:17px;line-height:1.55;margin:0}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:baseline}
+.kv dt{color:var(--ink-2);font-size:14px}.kv dd{margin:0;font-weight:600;text-align:right}
+.bar-row{display:grid;grid-template-columns:120px minmax(0,1fr) 54px;gap:10px;align-items:center;font-size:14px}
+.bar-row .tr{height:10px;border-radius:6px;background:var(--surface-2);position:relative;overflow:hidden}
+.bar-row .tr i{position:absolute;inset:0 auto 0 0;border-radius:6px;background:var(--bz)}
+.insight{background:var(--surface-2);border-radius:var(--r-sm);padding:10px 12px;font-size:14.5px}
+.report{white-space:pre-wrap;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:13px;line-height:1.6;background:var(--surface);border-radius:var(--r-md);padding:14px;margin:0;overflow-x:auto;user-select:text}
+.swap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.swap:last-child{border-bottom:0}
+.swap .t{font-weight:600}
+.swap .d{font-family:var(--f-display);font-weight:700;color:var(--brand);font-size:18px;text-align:right}
+.swap .s{font-size:13px;color:var(--ink-2);grid-column:1/-1}
 /* Rezepte */
 .r-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .r-card{background:var(--surface);border-radius:var(--r-lg);box-shadow:var(--shadow);overflow:hidden;border:0;padding:0;text-align:left;display:flex;flex-direction:column;position:relative}
@@ -185,8 +208,8 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 
 /* Tab-Leiste */
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:25;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-.tabbar nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
-.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;font-size:11.5px;font-weight:600;color:var(--ink-3)}
+.tabbar nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tab{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 0 8px;font-size:11px;font-weight:600;color:var(--ink-3)}
 .tab svg{width:24px;height:24px}
 .tab[aria-current="page"]{color:var(--brand)}
 
@@ -246,6 +269,13 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
     <button class="qa meal" data-go="rechner"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11h16a8 8 0 0 1-16 0z"/><path d="M9 7c0-1.5 1-2 1-3.5M14 7c0-1.5 1-2 1-3.5"/></svg></span>Mahlzeit</button>
     <button class="qa note" data-add="note"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>Notiz</button>
   </div>
+
+  <div id="repeat-wrap" hidden>
+    <div class="sec-head" style="margin-bottom:8px"><span class="sec-title" style="font-size:17px">Nochmal eintragen</span><span class="small muted">ein Tipp genügt</span></div>
+    <div class="repeat" id="repeat"></div>
+  </div>
+
+  <button class="sos" data-go="alltag"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21.2l8.8-8.8a5.5 5.5 0 0 0 0-7.8z"/><path d="M3.5 12h4l2-3 3 6 2-3h6"/></svg></span><span style="min-width:0"><b>Mein Notfallplan</b><br><span class="small muted" id="sos-sub">Für Unterzuckerungen, griffbereit</span></span></button>
 
   <div class="card">
     <div class="sec-head"><h2>Blutzucker heute</h2><span class="small muted num" id="bz-range-lbl"></span></div>
@@ -313,6 +343,30 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
   </div>
 </section>
 
+<!-- ============ ALLTAG ============ -->
+<section class="view" id="v-alltag" aria-label="Alltag">
+  <div class="card" id="plan-card"></div>
+  <div class="card">
+    <div class="sec-head"><h2>Deine Muster</h2><div class="seg" id="pat-range" style="padding:3px"><button aria-pressed="false" data-d="7">7 T</button><button aria-pressed="true" data-d="14">14 T</button><button aria-pressed="false" data-d="30">30 T</button></div></div>
+    <div id="patterns" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <h2>Fürs Arztgespräch</h2>
+    <p class="muted small" style="margin:6px 0 12px">Eine kurze Zusammenfassung deiner Einträge, die du vorlesen, kopieren oder in eine Nachricht einfügen kannst.</p>
+    <button class="btn btn-soft btn-block" id="open-report">Bericht ansehen</button>
+  </div>
+  <div class="card">
+    <h2>Essen unterwegs</h2>
+    <p class="muted small" style="margin:6px 0 12px">Döner, Pizza, Sushi oder Brezel: typische Portionen mit Kohlenhydraten zum Schätzen.</p>
+    <button class="btn btn-soft btn-block" id="go-unterwegs">Unterwegs-Liste öffnen</button>
+  </div>
+  <div class="card">
+    <div class="sec-head"><h2>Tausch-Ideen</h2><span class="label">KH pro Portion</span></div>
+    <div id="swaps" style="margin-top:4px"></div>
+  </div>
+  <p class="hint">Alle Auswertungen beschreiben nur deine eigenen Einträge. Sie zeigen Zusammenhänge, keine Ursachen, und ersetzen keine Beratung.</p>
+</section>
+
 </div>
 
 <!-- Tab-Leiste -->
@@ -321,6 +375,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
   <button class="tab" data-tab="rechner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="3"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/></svg>Rechner</button>
   <button class="tab" data-tab="rezepte"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13"/><path d="M9 8h6"/></svg>Rezepte</button>
   <button class="tab" data-tab="tagebuch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="17" rx="3"/><path d="M8 2.5v4M16 2.5v4M3 10h18"/></svg>Tagebuch</button>
+  <button class="tab" data-tab="alltag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="m4.9 4.9 4.3 4.3M14.8 14.8l4.3 4.3M14.8 9.2l4.3-4.3M4.9 19.1l4.3-4.3"/></svg>Alltag</button>
 </nav></div>
 
 <div class="scrim" id="scrim"></div>
@@ -404,7 +459,17 @@ const FOODS=[
  ['gummibaerchen','Fruchtgummi','Süßes',77,340,7,20],
  ['kuchen','Rührkuchen','Süßes',50,400,6,70],
  ['reiswaffel','Reiswaffel','Süßes',80,390,8,8],
- ['pizza','Pizza Margherita','Gerichte',28,250,11,350],
+ ['traubenzucker','Traubenzucker','Süßes',91,370,0,6],
+ // Unterwegs: typische Portionen zum Schätzen
+ ['doener','Döner im Brot','Unterwegs',25,230,12,350],
+ ['pommes','Pommes frites','Unterwegs',33,290,3.5,150],
+ ['burger','Cheeseburger','Unterwegs',28,260,14,200],
+ ['pizza','Pizza Margherita','Unterwegs',28,250,11,350],
+ ['sushi','Maki-Sushi (8 Stück)','Unterwegs',30,150,5,200],
+ ['bolognese','Spaghetti Bolognese','Unterwegs',18,150,7,450],
+ ['croissant','Croissant','Unterwegs',43,400,8,60],
+ ['brezel','Laugenbrezel','Unterwegs',48,250,8,90],
+ ['latte','Latte macchiato','Unterwegs',5,50,3.3,300],
  // Getränke
  ['osaft','Orangensaft','Getränke',9,45,0.7,200],
  ['cola','Cola','Getränke',10.6,42,0,330],
@@ -468,15 +533,19 @@ const RECIPES=[
 ];
 const IMG_BASE='img/';
 function imgSrc(id){return (window.RECIPE_IMAGES&&window.RECIPE_IMAGES[id])||IMG_BASE+id+'.jpg';}
+function thumb(f){
+  const src=(window.FOOD_IMAGES&&window.FOOD_IMAGES[f.id])||(f.cat==='Eigene'?'':IMG_BASE+'food/'+f.id+'.jpg');
+  return src?`<img class="thumb" src="${src}" alt="" loading="lazy">`:`<span class="thumb" aria-hidden="true">${esc(f.name.charAt(0).toUpperCase())}</span>`;
+}
 
 // ============================================================
 // ZUSTAND & SPEICHERUNG — nur lokal im Browser
 // ============================================================
 const STORE_KEY='morehealth.v2';
-const DEFAULTS={entries:[],custom:[],favs:[],calc:[],settings:{name:'',unit:'mgdl',low:70,high:180}};
+const DEFAULTS={entries:[],custom:[],favs:[],calc:[],plan:{text:'',carry:'',contact:'',phone:'',team:''},settings:{name:'',unit:'mgdl',low:70,high:180}};
 let S=load();
 function load(){
-  try{const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(d)return Object.assign(structuredClone(DEFAULTS),d,{settings:Object.assign({},DEFAULTS.settings,d.settings||{})});}catch(_){}
+  try{const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(d)return Object.assign(structuredClone(DEFAULTS),d,{settings:Object.assign({},DEFAULTS.settings,d.settings||{}),plan:Object.assign({},DEFAULTS.plan,d.plan||{})});}catch(_){}
   return structuredClone(DEFAULTS);
 }
 function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(S));}catch(_){}}
@@ -511,7 +580,7 @@ const ICON={
 // ============================================================
 // NAVIGATION
 // ============================================================
-const TITLES={heute:'Heute',rechner:'KH-Rechner',rezepte:'Rezepte',tagebuch:'Tagebuch'};
+const TITLES={heute:'Heute',rechner:'KH-Rechner',rezepte:'Rezepte',tagebuch:'Tagebuch',alltag:'Alltag'};
 let current='heute';
 function go(tab){
   if(!TITLES[tab])tab='heute';
@@ -654,6 +723,11 @@ function renderHeute(){
       <span style="font-family:var(--f-display);font-weight:700;font-size:40px;color:var(--bz);line-height:1" class="num">${bzShow(last.val)}</span>
       <span class="muted small">${bzUnit()} · ${timeStr(last.ts)} · ${esc(last.ctx)}</span>${bzPill(last.val)}</div>${spark(bz)}`;
   }
+  const seen=new Set(),rec=[];
+  S.entries.filter(e=>e.type==='meal').sort((a,b)=>b.ts-a.ts).forEach(e=>{const k=e.name.toLowerCase();if(!seen.has(k)&&rec.length<6){seen.add(k);rec.push(e);}});
+  $('#repeat-wrap').hidden=!rec.length;
+  $('#repeat').innerHTML=rec.map(e=>`<button data-repeat="${e.id}"><span class="n">${esc(e.name)}</span><span class="k num">${Math.round(e.kh)} g KH · ${fmt(e.kh/12)} BE</span></button>`).join('');
+  $('#sos-sub').textContent=S.plan.text?'Dein Plan ist hinterlegt':'Jetzt anlegen, damit er griffbereit ist';
   const pool=S.favs.length?RECIPES.filter(r=>S.favs.includes(r.id)):RECIPES;
   const tag=h<11?'Frühstück':h<15?'Mittag':h<18?'Snack':'Abend';
   const cand=pool.filter(r=>r.tags.includes(tag));const list=cand.length?cand:pool;
@@ -690,14 +764,14 @@ function renderResults(){
   if(q)list=list.filter(f=>f.name.toLowerCase().includes(q));
   else if(foodCat==='Zuletzt'){const ids=recentFoodIds();list=ids.map(food).filter(Boolean);}
   else if(foodCat!=='Alle')list=list.filter(f=>f.cat===foodCat);
-  $('#food-res').innerHTML=list.length?list.slice(0,40).map(f=>`<button class="res" data-food="${f.id}"><span style="min-width:0"><span class="n">${esc(f.name)}</span><br><span class="m num">${fmt(f.kh)} g KH pro 100 g · Portion ${f.portion} g</span></span><span class="plus" aria-hidden="true">+</span></button>`).join('')
+  $('#food-res').innerHTML=list.length?list.slice(0,40).map(f=>`<button class="res" data-food="${f.id}">${thumb(f)}<span style="min-width:0"><span class="n">${esc(f.name)}</span><br><span class="m num">${fmt(f.kh)} g KH pro 100 g · Portion ${f.portion} g</span></span><span class="plus" aria-hidden="true">+</span></button>`).join('')
     :`<div class="empty">${foodCat==='Zuletzt'&&!q?'Hier erscheinen Lebensmittel, die du schon eingetragen hast.':'Nichts gefunden. Leg es unten als eigenes Lebensmittel an.'}</div>`;
 }
 function renderCalc(){
   const m=macros(S.calc);
   $('#c-kh').textContent=Math.round(m.kh);$('#c-be').textContent=fmt(m.be);$('#c-ke').textContent=fmt(m.ke);
-  $('#calc-items').innerHTML=S.calc.length?S.calc.map(([id,g],i)=>{const f=food(id);if(!f)return'';return`<div class="item"><div style="min-width:0"><div class="n">${esc(f.name)}</div><div class="kh num">${fmt(f.kh*g/100)} g KH · ${fmt(f.kh*g/1200)} BE</div></div>
-    <div class="stepper"><button data-step="${i}" data-d="-10" aria-label="10 g weniger">−</button><input class="num" type="number" inputmode="numeric" value="${g}" data-gram="${i}" aria-label="Menge in Gramm"><button data-step="${i}" data-d="10" aria-label="10 g mehr">+</button></div></div>`;}).join('')
+  $('#calc-items').innerHTML=S.calc.length?S.calc.map(([id,g],i)=>{const f=food(id);if(!f)return'';return`<div class="item">${thumb(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div><div class="kh num">${fmt(f.kh*g/100)} g KH · ${fmt(f.kh*g/1200)} BE</div></div>
+    <div class="stepper" style="grid-column:2/-1;justify-self:end"><button data-step="${i}" data-d="-10" aria-label="10 g weniger">−</button><input class="num" type="number" inputmode="numeric" value="${g}" data-gram="${i}" aria-label="Menge in Gramm"><button data-step="${i}" data-d="10" aria-label="10 g mehr">+</button></div></div>`;}).join('')
     :`<div class="empty"><b>Noch leer</b>Such oben ein Lebensmittel und tippe es an. Die Menge passt du danach in Gramm an.</div>`;
   $('#calc-save').disabled=!S.calc.length;$('#calc-save').style.opacity=S.calc.length?1:.45;
 }
@@ -869,6 +943,135 @@ function exportCSV(){
 }
 
 // ============================================================
+// NOCHMAL EINTRAGEN
+// ============================================================
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-repeat]');if(!b)return;
+  const src=S.entries.find(x=>x.id===b.dataset.repeat);if(!src)return;
+  addEntry({type:'meal',ts:Date.now(),name:src.name,kh:src.kh,meal:guessMealType(),items:(src.items||[]).map(c=>c.slice()),recipe:src.recipe});
+  toast(src.name+' eingetragen');
+});
+
+// ============================================================
+// ALLTAG: Notfallplan, Muster, Bericht, Unterwegs, Tausch-Ideen
+// ============================================================
+let patDays=14;
+function renderAlltag(){renderPlan();renderPatterns();renderSwaps();}
+function renderPlan(){
+  const p=S.plan;const box=$('#plan-card');
+  if(!p.text&&!p.phone&&!p.team){
+    box.innerHTML=`<h2>Mein Notfallplan</h2><p class="muted" style="margin:6px 0 14px">Halte fest, was du mit deinem Diabetes-Team für eine Unterzuckerung vereinbart hast. So finden du oder Menschen um dich herum es im Ernstfall sofort.</p><button class="btn btn-primary btn-block" id="plan-edit">Notfallplan anlegen</button>`;
+  }else{
+    const tel=n=>`<a href="tel:${esc(n.replace(/[^+0-9]/g,''))}" style="color:var(--brand);font-weight:700">${esc(n)}</a>`;
+    box.innerHTML=`<div class="sec-head"><h2>Mein Notfallplan</h2><button class="link" id="plan-edit">Bearbeiten</button></div>
+      ${p.text?`<p class="plan-text" style="margin-top:10px">${esc(p.text)}</p>`:''}
+      <dl class="kv" style="margin:14px 0 0">${p.carry?`<dt>Habe ich dabei</dt><dd>${esc(p.carry)}</dd>`:''}${p.contact||p.phone?`<dt>Notfallkontakt</dt><dd>${esc(p.contact)} ${p.phone?tel(p.phone):''}</dd>`:''}${p.team?`<dt>Diabetes-Team</dt><dd>${tel(p.team)}</dd>`:''}<dt>Rettungsdienst</dt><dd>${tel('112')}</dd></dl>`;
+  }
+  box.querySelector('#plan-edit').onclick=editPlan;
+}
+function editPlan(){
+  const p=S.plan;
+  openSheet(`<h3 id="sheet-title">Mein Notfallplan</h3><div class="stack">
+    <div class="field"><label for="pl-text">Das tue ich bei einer Unterzuckerung</label><textarea class="input" id="pl-text" rows="5" placeholder="So, wie du es mit deinem Diabetes-Team besprochen hast">${esc(p.text)}</textarea></div>
+    <div class="field"><label for="pl-carry">Das habe ich immer dabei</label><input class="input" id="pl-carry" type="text" value="${esc(p.carry)}" placeholder="z. B. Traubenzucker in der Jackentasche"></div>
+    <div class="field"><label for="pl-contact">Notfallkontakt</label><input class="input" id="pl-contact" type="text" value="${esc(p.contact)}" placeholder="Name"></div>
+    <div class="field"><label for="pl-phone">Telefon Notfallkontakt</label><input class="input" id="pl-phone" type="tel" value="${esc(p.phone)}"></div>
+    <div class="field"><label for="pl-team">Telefon Praxis / Diabetes-Team</label><input class="input" id="pl-team" type="tel" value="${esc(p.team)}"></div>
+    <button class="btn btn-primary btn-block" id="pl-save">Speichern</button>
+    <p class="hint">More Health schlägt keine Behandlung vor. Trag hier nur ein, was mit deinem Team vereinbart ist.</p></div>`,el=>{
+    el.querySelector('#pl-save').onclick=()=>{
+      S.plan={text:el.querySelector('#pl-text').value.trim(),carry:el.querySelector('#pl-carry').value.trim(),contact:el.querySelector('#pl-contact').value.trim(),phone:el.querySelector('#pl-phone').value.trim(),team:el.querySelector('#pl-team').value.trim()};
+      save();closeSheet();render();toast('Notfallplan gespeichert');
+    };
+  });
+}
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+function inPeriod(days){const from=new Date();from.setHours(0,0,0,0);from.setDate(from.getDate()-days+1);return S.entries.filter(e=>e.ts>=from.getTime());}
+function renderPatterns(){
+  document.querySelectorAll('#pat-range button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===patDays));
+  const ents=inPeriod(patDays),bz=ents.filter(e=>e.type==='bz'),box=$('#patterns');
+  if(bz.length<5){box.innerHTML=`<div class="empty"><b>Noch zu wenige Messwerte</b>Ab 5 Messwerten im gewählten Zeitraum zeigt dir More Health hier, wann deine Werte eher höher oder niedriger lagen.</div>`;return;}
+  const {low,high}=S.settings;const share=Math.round(bz.filter(e=>e.val>=low&&e.val<=high).length/bz.length*100);
+  let html=`<div class="insight"><b class="num">${share} %</b> deiner ${bz.length} Messwerte lagen in deinem Bereich (${bzShow(low)}–${bzShow(high)} ${bzUnit()}).</div>`;
+  const ctxs={};bz.forEach(e=>(ctxs[e.ctx]=ctxs[e.ctx]||[]).push(e.val));
+  const rows=Object.entries(ctxs).filter(([,v])=>v.length>=2).map(([k,v])=>[k,avg(v),v.length]);
+  if(rows.length){const mx=Math.max(...rows.map(r=>r[1]),high);
+    html+=`<div><div class="label" style="margin-bottom:8px">Durchschnitt nach Zeitpunkt</div><div style="display:flex;flex-direction:column;gap:8px">${rows.map(([k,a,n])=>`<div class="bar-row"><span>${esc(k)} <span class="muted small">(${n})</span></span><span class="tr"><i style="width:${Math.round(a/mx*100)}%"></i></span><b class="num" style="text-align:right">${bzShow(a)}</b></div>`).join('')}</div></div>`;}
+  const dayAvg=k=>{const v=bz.filter(e=>dayKey(e.ts)===k).map(e=>e.val);return v.length?v:null;};
+  const lines=[];
+  ['Sport','Stress','Wenig Schlaf','Krank'].forEach(tag=>{
+    const days=new Set(ents.filter(e=>e.type==='note'&&(e.tags||[]).includes(tag)).map(e=>dayKey(e.ts)));
+    if(!days.size)return;
+    const withV=[],without=[];bz.forEach(e=>(days.has(dayKey(e.ts))?withV:without).push(e.val));
+    if(withV.length>=2&&without.length>=2)lines.push(`An Tagen mit <b>${esc(tag)}</b> lag dein Durchschnitt bei <b class="num">${bzShow(avg(withV))}</b>, an anderen Tagen bei <b class="num">${bzShow(avg(without))}</b> ${bzUnit()}.`);
+  });
+  const after={};
+  ents.filter(e=>e.type==='meal').forEach(m=>{const v=bz.filter(b=>b.ts-m.ts>=60*6e4&&b.ts-m.ts<=180*6e4);if(!v.length)return;const k=m.name;(after[k]=after[k]||{vals:[],kh:[]});after[k].vals.push(v[0].val);after[k].kh.push(m.kh);});
+  const top=Object.entries(after).map(([k,o])=>[k,avg(o.vals),avg(o.kh),o.vals.length]).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(top.length)lines.push(`Messwerte 1 bis 3 Stunden nach dem Essen:<br>${top.map(([k,a,kh,n])=>`„${esc(k)}“ (${n}×, Ø ${Math.round(kh)} g KH): Ø <b class="num">${bzShow(a)}</b>`).join('<br>')}`);
+  html+=lines.map(l=>`<div class="insight">${l}</div>`).join('');
+  if(!lines.length)html+=`<p class="hint" style="margin:0">Tipp: Notizen wie „Sport“ oder „Stress“ und Messwerte nach dem Essen machen hier weitere Zusammenhänge sichtbar.</p>`;
+  box.innerHTML=html;
+}
+$('#pat-range').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;patDays=+b.dataset.d;renderPatterns();});
+function reportText(days){
+  const ents=inPeriod(days),bz=ents.filter(e=>e.type==='bz'),meals=ents.filter(e=>e.type==='meal'),notes=ents.filter(e=>e.type==='note');
+  const from=new Date();from.setDate(from.getDate()-days+1);const d=x=>x.toLocaleDateString('de-DE');
+  const L=[`More Health · Zusammenfassung ${d(from)} bis ${d(new Date())}`,''];
+  L.push('BLUTZUCKER ('+bzUnit()+')');
+  if(bz.length){const v=bz.map(e=>e.val);const {low,high}=S.settings;
+    L.push(`Messungen: ${bz.length} an ${new Set(bz.map(e=>dayKey(e.ts))).size} Tagen`);
+    L.push(`Durchschnitt: ${bzShow(avg(v))} · niedrigster ${bzShow(Math.min(...v))} · höchster ${bzShow(Math.max(...v))}`);
+    L.push(`Im eigenen Zielbereich (${bzShow(low)}–${bzShow(high)}): ${Math.round(v.filter(x=>x>=low&&x<=high).length/v.length*100)} %`);
+    L.push(`Unter dem Bereich: ${v.filter(x=>x<low).length}× · über dem Bereich: ${v.filter(x=>x>high).length}×`);
+    const ctxs={};bz.forEach(e=>(ctxs[e.ctx]=ctxs[e.ctx]||[]).push(e.val));
+    Object.entries(ctxs).forEach(([k,a])=>L.push(`  ${k}: Ø ${bzShow(avg(a))} (${a.length}×)`));
+  }else L.push('Keine Messwerte im Zeitraum.');
+  L.push('','KOHLENHYDRATE');
+  if(meals.length){const byDay={};meals.forEach(m=>{const k=dayKey(m.ts);byDay[k]=(byDay[k]||0)+m.kh;});const per=avg(Object.values(byDay));
+    L.push(`Mahlzeiten: ${meals.length} an ${Object.keys(byDay).length} Tagen`);
+    L.push(`Ø pro Tag: ${Math.round(per)} g KH (${fmt(per/12)} BE)`);
+    const mt={};meals.forEach(m=>(mt[m.meal||'Mahlzeit']=mt[m.meal||'Mahlzeit']||[]).push(m.kh));
+    Object.entries(mt).forEach(([k,a])=>L.push(`  ${k}: Ø ${Math.round(avg(a))} g KH (${a.length}×)`));
+  }else L.push('Keine Mahlzeiten im Zeitraum.');
+  if(notes.length){const t={};notes.forEach(n=>(n.tags||[]).forEach(x=>t[x]=(t[x]||0)+1));
+    L.push('','NOTIZEN');Object.entries(t).sort((a,b)=>b[1]-a[1]).forEach(([k,n])=>L.push(`  ${k}: ${n}×`));}
+  L.push('','Erstellt mit More Health. Werte aus eigenen Einträgen.');
+  return L.join('\n');
+}
+$('#open-report').onclick=()=>{
+  let days=14;
+  openSheet(`<h3 id="sheet-title">Bericht fürs Arztgespräch</h3><div class="stack">
+    <div class="seg" id="rp-range"><button aria-pressed="false" data-d="7">7 Tage</button><button aria-pressed="true" data-d="14">14 Tage</button><button aria-pressed="false" data-d="30">30 Tage</button></div>
+    <pre class="report" id="rp-text"></pre>
+    <button class="btn btn-primary btn-block" id="rp-copy">Text kopieren</button>
+    <p class="hint">Bring auch deine Messgerät- oder Sensordaten mit. Dieser Bericht enthält nur, was du in More Health eingetragen hast.</p></div>`,el=>{
+    const upd=()=>{el.querySelector('#rp-text').textContent=reportText(days);el.querySelectorAll('#rp-range button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===days));};upd();
+    el.querySelector('#rp-range').onclick=e=>{const b=e.target.closest('button');if(!b)return;days=+b.dataset.d;upd();};
+    el.querySelector('#rp-copy').onclick=()=>{
+      const txt=reportText(days);
+      const sel=()=>{const r=document.createRange();r.selectNodeContents(el.querySelector('#rp-text'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Text markiert, jetzt kopieren');};
+      try{navigator.clipboard.writeText(txt).then(()=>toast('Bericht kopiert'),sel);}catch(_){sel();}
+    };
+  });
+};
+$('#go-unterwegs').onclick=()=>{foodCat='Unterwegs';$('#food-q').value='';go('rechner');};
+const SWAPS=[
+  ['cola',330,'colazero',330,'Gleicher Geschmack, kein Zucker'],
+  ['osaft',200,'orange',150,'Ganze Frucht statt Saft, mit Ballaststoffen'],
+  ['toast',60,'vollkornbrot',50,'Eine Scheibe Vollkorn statt zwei Toast'],
+  ['nudeln',180,'vknudeln',180,'Vollkorn sättigt länger'],
+  ['reis',150,'quinoa',150,'Mehr Eiweiß pro Portion'],
+  ['gummibaerchen',40,'erdbeeren',200,'Eine große Schale Beeren statt einer Handvoll Fruchtgummi'],
+  ['brezel',90,'pute',40,'Herzhafter Snack: Putenröllchen statt Brezel'],
+  ['latte',300,'kaffee',200,'Schwarz statt mit viel Milch'],
+];
+function renderSwaps(){
+  $('#swaps').innerHTML=SWAPS.map(([a,ga,b,gb,s])=>{const fa=food(a),fb=food(b);const ka=fa.kh*ga/100,kb=fb.kh*gb/100;
+    return`<div class="swap"><span class="t">${esc(fa.name)} → ${esc(fb.name)}</span><span class="d num">−${Math.round(ka-kb)} g</span><span class="s num">${ga} g: ${fmt(ka)} g KH · ${gb} g: ${fmt(kb)} g KH. ${esc(s)}</span></div>`;}).join('');
+}
+
+// ============================================================
 // START
 // ============================================================
 function render(){
@@ -876,6 +1079,7 @@ function render(){
   else if(current==='rechner')renderRechner();
   else if(current==='rezepte')renderRezepte();
   else if(current==='tagebuch')renderTagebuch();
+  else if(current==='alltag')renderAlltag();
 }
 go((location.hash||'').slice(1)||'heute');
 if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.RECIPE_IMAGES){navigator.serviceWorker.register('sw.js').catch(()=>{});}
