@@ -306,7 +306,10 @@ table.gtbl tr.ghl td{background:rgba(48,209,88,.04)}
   <div class="card">
     <div class="sh">
       <div><div class="sh-t">Blutzucker-Protokoll</div><div class="sh-s">Alle Messungen</div></div>
-      <button class="btn btn-g" onclick="exportCSV()" style="font-size:12px">CSV Export</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-g" onclick="exportCSV()" style="font-size:12px">CSV Export</button>
+        <button class="btn btn-g" onclick="clearAll()" style="font-size:12px;color:var(--rd)">Alle Daten löschen</button>
+      </div>
     </div>
     <table><thead><tr><th>Uhrzeit</th><th>Wert</th><th>Status</th><th>Zeitpunkt</th><th>Notiz</th></tr></thead>
     <tbody id="bz-body"><tr><td colspan="5" style="color:var(--sub);text-align:center;padding:3rem;font-size:13px">Noch keine Einträge</td></tr></tbody></table>
@@ -373,7 +376,7 @@ table.gtbl tr.ghl td{background:rgba(48,209,88,.04)}
     <div class="sh"><div><div class="sh-t">Mess-Erinnerungen</div><div class="sh-s">Zeiten anpassen und aktivieren</div></div></div>
     <div id="reminder-list"></div>
     <div style="margin-top:1.25rem"><button class="btn btn-p btn-full" onclick="requestNotif()" id="notif-btn">Benachrichtigungen aktivieren</button></div>
-    <div class="disc">Funktioniert nur bei geöffneter App im Browser. Keine Daten auf externen Servern.</div>
+    <div class="disc">Funktioniert nur bei geöffneter App im Browser. Deine Einträge werden nur lokal in diesem Browser gespeichert.</div>
   </div>
   <div class="card">
     <div class="sh"><div class="sh-t">Eigene Erinnerung</div></div>
@@ -573,6 +576,7 @@ table.gtbl tr.ghl td{background:rgba(48,209,88,.04)}
 const TL=80,TH=160,DL=55,DH=300;
 let bzData=[],mealData=[],chart=null,customRems=[];
 let recipeCat='low';
+const STORE_KEY='morehealth.v1';
 // GI state
 let giFood=null,giSimilar=[],giSortKey='gi',giSortDir=1;
 
@@ -588,8 +592,35 @@ const defaultRems=[
 // INIT
 // ============================================================
 document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+load();
 initChart();
-renderReminders();
+renderReminders();renderCustomRems();
+renderBZ();renderMeals();updateMetrics();updateChart();
+if(typeof Notification!=='undefined'&&Notification.permission==='granted'){
+  document.getElementById('notif-banner').classList.add('show');
+  const nb=document.getElementById('notif-btn');nb.textContent='Aktiv ✓';nb.disabled=true;
+  defaultRems.filter(r=>r.on).forEach(schedRem);customRems.forEach(schedRem);
+}
+
+// ============================================================
+// SPEICHERUNG — nur lokal im Browser (localStorage)
+// ============================================================
+function save(){
+  try{localStorage.setItem(STORE_KEY,JSON.stringify({bzData,mealData,customRems,rems:defaultRems.map(r=>({id:r.id,time:r.time,on:r.on}))}));}catch(_){}
+}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');
+    if(!d)return;
+    bzData=d.bzData||[];mealData=d.mealData||[];customRems=d.customRems||[];
+    (d.rems||[]).forEach(s=>{const r=defaultRems.find(x=>x.id===s.id);if(r){r.time=s.time;r.on=s.on;}});
+  }catch(_){}
+}
+function clearAll(){
+  if(!confirm('Alle Messwerte, Mahlzeiten und Erinnerungen in diesem Browser löschen?'))return;
+  try{localStorage.removeItem(STORE_KEY);}catch(_){}
+  location.reload();
+}
 
 // ============================================================
 // TAB ROUTING
@@ -605,7 +636,8 @@ function switchTab(id,el){
 // ============================================================
 // HELPERS
 // ============================================================
-function nowStr(){return new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});}
+function nowStr(){return new Date().toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function esc(t){return String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function getStatus(v){
   if(v<DL||v>=DH)return{label:'Kritisch',cls:'v-crit',bcls:'b-crit'};
   if(v<TL)return{label:'Niedrig',cls:'v-warn',bcls:'b-warn'};
@@ -619,10 +651,10 @@ function getStatus(v){
 function addBZ(){
   const v=parseInt(document.getElementById('bz-val').value);
   if(!v||v<20||v>600)return;
-  bzData.push({time:nowStr(),val:v,type:document.getElementById('bz-time').value,note:document.getElementById('bz-note').value});
+  bzData.push({time:nowStr(),val:v,type:document.getElementById('bz-time').value,note:document.getElementById('bz-note').value,ts:Date.now()});
   document.getElementById('bz-val').value='';
   document.getElementById('bz-note').value='';
-  renderBZ();updateMetrics();updateChart();showAlert(v);
+  renderBZ();updateMetrics();updateChart();showAlert(v);save();
 }
 
 function showAlert(v){
@@ -641,7 +673,7 @@ function renderBZ(){
   if(!bzData.length){tb.innerHTML='<tr><td colspan="5" style="color:var(--sub);text-align:center;padding:3rem">Noch keine Einträge</td></tr>';return;}
   tb.innerHTML=[...bzData].reverse().map(e=>{
     const s=getStatus(e.val);
-    return`<tr><td style="color:var(--mut)">${e.time}</td><td style="font-weight:500">${e.val} mg/dL</td><td><span class="bdg ${s.bcls}"><span class="bdot"></span>${s.label}</span></td><td style="color:var(--mut)">${e.type}</td><td style="color:var(--mut)">${e.note||'—'}</td></tr>`;
+    return`<tr><td style="color:var(--mut)">${e.time}</td><td style="font-weight:500">${e.val} mg/dL</td><td><span class="bdg ${s.bcls}"><span class="bdot"></span>${s.label}</span></td><td style="color:var(--mut)">${esc(e.type)}</td><td style="color:var(--mut)">${esc(e.note)||'—'}</td></tr>`;
   }).join('');
 }
 
@@ -704,16 +736,16 @@ function addMeal(){
   const kh=parseFloat(document.getElementById('meal-kh').value)||0;
   const pr=parseFloat(document.getElementById('meal-pr').value)||0;
   const fat=parseFloat(document.getElementById('meal-fat').value)||0;
-  mealData.push({time:nowStr(),name:n,kh,pr,fat,kcal:Math.round(kh*4+pr*4+fat*9),be:Math.round((kh/12)*10)/10});
+  mealData.push({time:nowStr(),name:n,kh,pr,fat,kcal:Math.round(kh*4+pr*4+fat*9),be:Math.round((kh/12)*10)/10,ts:Date.now()});
   ['meal-name','meal-kh','meal-pr','meal-fat'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('meal-calc').style.display='none';
-  renderMeals();
+  renderMeals();save();
 }
 
 function renderMeals(){
   const tb=document.getElementById('meal-body');
   if(!mealData.length){tb.innerHTML='<tr><td colspan="7" style="color:var(--sub);text-align:center;padding:3rem">Noch keine Einträge</td></tr>';return;}
-  tb.innerHTML=[...mealData].reverse().map(e=>`<tr><td style="color:var(--mut)">${e.time}</td><td style="font-weight:500">${e.name}</td><td>${e.kh}g</td><td style="color:var(--or);font-weight:500">${e.be.toFixed(1)}</td><td>${e.pr}g</td><td>${e.fat}g</td><td style="color:var(--mut)">${e.kcal}</td></tr>`).join('');
+  tb.innerHTML=[...mealData].reverse().map(e=>`<tr><td style="color:var(--mut)">${e.time}</td><td style="font-weight:500">${esc(e.name)}</td><td>${e.kh}g</td><td style="color:var(--or);font-weight:500">${e.be.toFixed(1)}</td><td>${e.pr}g</td><td>${e.fat}g</td><td style="color:var(--mut)">${e.kcal}</td></tr>`).join('');
 }
 
 // ============================================================
@@ -769,8 +801,8 @@ function renderReminders(){
     </div>`).join('');
 }
 
-function updateRemTime(id,val){const r=defaultRems.find(r=>r.id===id);if(r){r.time=val;if(r.on)schedRem(r);}}
-function toggleRem(id,on){const r=defaultRems.find(r=>r.id===id);if(r){r.on=on;if(on)schedRem(r);}}
+function updateRemTime(id,val){const r=defaultRems.find(r=>r.id===id);if(r){r.time=val;if(r.on)schedRem(r);save();}}
+function toggleRem(id,on){const r=defaultRems.find(r=>r.id===id);if(r){r.on=on;if(on)schedRem(r);save();}}
 
 function schedRem(r){
   if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
@@ -778,7 +810,13 @@ function schedRem(r){
   const now=new Date(),t=new Date();
   t.setHours(h,m,0,0);
   if(t<=now)t.setDate(t.getDate()+1);
-  setTimeout(()=>{new Notification('Gluco',{body:r.name+' — Zeit für deine Messung.'});},t-now);
+  setTimeout(()=>{
+    // Nur feuern, wenn die Erinnerung noch aktiv ist und die Zeit nicht geändert wurde
+    const cur=defaultRems.find(x=>x.id===r.id)||customRems.find(x=>x.id===r.id);
+    if(!cur||cur.time!==r.time||cur.on===false)return;
+    new Notification('More Health',{body:r.name+' — Zeit für deine Messung.'});
+    schedRem(cur);
+  },t-now);
 }
 
 async function requestNotif(){
@@ -787,7 +825,7 @@ async function requestNotif(){
   if(p==='granted'){
     document.getElementById('notif-banner').classList.add('show');
     const btn=document.getElementById('notif-btn');btn.textContent='Aktiv ✓';btn.disabled=true;
-    defaultRems.filter(r=>r.on).forEach(r=>schedRem(r));
+    defaultRems.filter(r=>r.on).forEach(r=>schedRem(r));customRems.forEach(schedRem);
   }
 }
 
@@ -797,7 +835,7 @@ function addCustomRem(){
   if(!name||!time)return;
   customRems.push({id:'c'+Date.now(),name,time});
   document.getElementById('rem-name').value='';document.getElementById('rem-time-inp').value='';
-  renderCustomRems();
+  renderCustomRems();schedRem(customRems[customRems.length-1]);save();
 }
 
 function renderCustomRems(){
@@ -806,11 +844,11 @@ function renderCustomRems(){
   list.innerHTML=customRems.map(r=>`
     <div class="rem-item">
       <div class="rem-ico" style="background:var(--bl-d);color:var(--bl)">◆</div>
-      <div class="rem-inf"><div class="rem-n">${r.name}</div><div style="font-size:12px;color:var(--mut);margin-top:3px">${r.time} Uhr</div></div>
+      <div class="rem-inf"><div class="rem-n">${esc(r.name)}</div><div style="font-size:12px;color:var(--mut);margin-top:3px">${r.time} Uhr</div></div>
       <button class="btn btn-g" style="font-size:11px;padding:6px 12px" onclick="delCustomRem('${r.id}')">Entfernen</button>
     </div>`).join('');
 }
-function delCustomRem(id){customRems=customRems.filter(r=>r.id!==id);renderCustomRems();}
+function delCustomRem(id){customRems=customRems.filter(r=>r.id!==id);renderCustomRems();save();}
 
 // ============================================================
 // RECIPES
@@ -857,7 +895,7 @@ Antworte AUSSCHLIESSLICH mit einem JSON-Array. Kein Text davor oder danach. Kein
     document.getElementById('recipe-loading').style.display='none';
     document.getElementById('recipe-output').innerHTML=`<div class="card" style="color:var(--rd);font-size:13px;line-height:1.6">
       <strong>Fehler beim Generieren.</strong><br>
-      Mögliche Ursache: Netzwerkproblem oder CORS-Sperre.<br>
+      Mögliche Ursache: Netzwerkproblem oder KI-Zugang noch nicht eingerichtet.<br>
       Bitte erneut versuchen oder Seite neu laden.<br>
       <span style="font-size:11px;color:var(--sub);margin-top:6px;display:block">Details: ${e.message}</span>
     </div>`;
@@ -961,7 +999,7 @@ Antworte AUSSCHLIESSLICH mit folgendem JSON. Kein Text davor oder danach. Kein M
     document.getElementById('opt-loading').style.display='none';
     document.getElementById('opt-output').innerHTML=`<div class="card" style="color:var(--rd);font-size:13px;line-height:1.6">
       <strong>Fehler beim Generieren.</strong><br>
-      Mögliche Ursache: Netzwerkproblem oder CORS-Sperre.<br>
+      Mögliche Ursache: Netzwerkproblem oder KI-Zugang noch nicht eingerichtet.<br>
       Bitte erneut versuchen oder Seite neu laden.<br>
       <span style="font-size:11px;color:var(--sub);margin-top:6px;display:block">Details: ${e.message}</span>
     </div>`;
@@ -1101,41 +1139,21 @@ function renderGITable(){
 }
 
 // ============================================================
-// API HELPER — uses CORS proxy so it works from GitHub Pages
+// API HELPER — läuft über den eigenen Cloudflare Worker (Ordner worker/),
+// der den Anthropic-Key geheim hält. Nach dem Deploy hier die Worker-URL eintragen.
 // ============================================================
+const API_URL='';
+
 async function callAPI(prompt, maxTokens) {
-  // Target Anthropic endpoint
-  const TARGET = 'https://api.anthropic.com/v1/messages';
-  // Public CORS proxies — tries each in order until one works
-  const PROXIES = [
-    url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-    url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  ];
-
-  const body = JSON.stringify({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: maxTokens || 1000,
-    messages: [{ role: 'user', content: prompt }]
+  if (!API_URL) throw new Error('KI-Zugang ist noch nicht eingerichtet (API_URL fehlt).');
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt, max_tokens: maxTokens || 1000 })
   });
-
-  let lastErr;
-  for (const proxyFn of PROXIES) {
-    try {
-      const res = await fetch(proxyFn(TARGET), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body
-      });
-      if (!res.ok) throw new Error('HTTP ' + res.status);
-      const data = await res.json();
-      if (data.error) throw new Error(data.error.message || 'API error');
-      const raw = (data.content || []).map(c => c.text || '').join('');
-      return extractJSON(raw);
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw lastErr || new Error('Alle Proxies fehlgeschlagen');
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || ('HTTP ' + res.status));
+  return extractJSON(data.text || '');
 }
 
 // Robustly extract the first valid JSON array or object from a string
