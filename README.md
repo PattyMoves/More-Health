@@ -1,16 +1,12 @@
 # More Health
 
-Persönliches Diabetes-Protokoll als einzelne Web-Seite (`index.html`): Blutzucker, Mahlzeiten (BE/KE), geschätzter HbA1c, Erinnerungen und KI-Funktionen (Rezepte, Tagesplan, GI-Datenbank).
+Ernährungs-App für den Alltag mit Diabetes, als einzelne Web-App (`index.html`), installierbar auf dem Handy-Homescreen.
 
-## Daten
-Alle Einträge werden nur lokal im Browser gespeichert (`localStorage`). Unter „Protokoll“ lassen sie sich als CSV exportieren oder komplett löschen.
+- **Heute**: Kohlenhydrate und BE des Tages, Blutzucker-Verlauf, Rezept-Idee
+- **KH-Rechner**: Lebensmittel suchen, Menge in Gramm anpassen, KH, BE (12 g) und KE (10 g) pro Mahlzeit; eigene Lebensmittel anlegen
+- **Rezepte**: 12 Rezepte mit Bildern, Mengenangaben, KH/BE/KE pro Portion, Portionen skalierbar, Favoriten
+- **Tagebuch**: Blutzucker, Mahlzeiten und Notizen pro Tag, Wochenübersicht, CSV-Export
 
-## KI einrichten (Cloudflare Worker)
-Die KI-Funktionen laufen über einen eigenen kleinen Worker im Ordner `worker/`, der den Anthropic-API-Key geheim hält.
+Alle Einträge werden nur lokal im Browser gespeichert (`localStorage`). Die App gibt bewusst keine Therapie-, Medikamenten- oder Insulinempfehlungen; Blutzuckerwerte werden nur relativ zum selbst eingetragenen Zielbereich markiert.
 
-1. `cd worker && npx wrangler login`
-2. `npx wrangler secret put ANTHROPIC_API_KEY` (Key aus der Anthropic Console einfügen)
-3. In `wrangler.toml` unter `ALLOWED_ORIGINS` die Adresse der Seite eintragen, dann `npx wrangler deploy`
-4. Die ausgegebene Worker-URL in `index.html` bei `const API_URL=''` eintragen.
-
-Hinweis: Die App ersetzt keine ärztliche Beratung.
+Nährwerte sind Durchschnittswerte pro 100 g und können je nach Produkt abweichen.

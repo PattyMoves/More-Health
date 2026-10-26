@@ -1,8 +1,0 @@
-name = "more-health-api"
-main = "worker.js"
-compatibility_date = "2026-10-01"
-
-[vars]
-# Seiten, die die KI nutzen dürfen (kommagetrennt, ohne Slash am Ende)
-ALLOWED_ORIGINS = "https://pattymoves.github.io"
-MODEL = "claude-sonnet-5-5"
