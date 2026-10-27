@@ -133,7 +133,28 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 /* Rechner */
 .search-wrap{position:relative}
 .search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:var(--ink-3);pointer-events:none}
-.search-wrap .input{padding-left:44px}
+.search-wrap .input{padding-left:44px;padding-right:56px}
+.scan-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:44px;height:44px;border:0;border-radius:12px;background:var(--brand-soft);color:var(--brand);display:grid;place-items:center;cursor:pointer}
+.search-wrap .scan-btn svg{position:static;transform:none;color:currentColor;width:22px;height:22px}
+.scan-box{position:relative;border-radius:var(--r-md);overflow:hidden;background:#111;aspect-ratio:4/3}
+.scan-box video{width:100%;height:100%;object-fit:cover;display:block}
+.scan-frame{position:absolute;left:12%;right:12%;top:30%;bottom:30%;border:3px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.35)}
+.scan-msg{position:absolute;left:0;right:0;bottom:10px;margin:0;text-align:center;color:#fff;font-size:14px;font-weight:600;padding:0 14px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.light-row{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 0 4px}
+.light-row::-webkit-scrollbar{display:none}
+.light-card{flex-shrink:0;width:150px;background:var(--surface);border-radius:var(--r-md);box-shadow:var(--shadow);overflow:hidden;border:0;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.light-card img{width:100%;height:96px;object-fit:cover;display:block}
+.light-card .b{padding:9px 11px 11px;display:flex;flex-direction:column;gap:6px}
+.light-card .t{font-weight:600;font-size:14px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:35px}
+.nudge{display:flex;align-items:center;gap:12px;background:var(--brand-soft);border-radius:var(--r-lg);padding:14px 16px}
+.nudge .t{font-weight:600}
+.nudge .acts{margin-left:auto;display:flex;gap:6px;flex-shrink:0}
+.nudge button{border:0;border-radius:10px;min-height:40px;padding:0 12px;font:inherit;font-weight:600;cursor:pointer}
+.rem-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
+.rem-row:last-child{border-bottom:0}
+.rem-row label{flex:1;display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
+.rem-row input[type=checkbox]{width:22px;height:22px;accent-color:var(--brand)}
+.rem-row input[type=time]{width:auto;min-width:110px}
 .results{display:flex;flex-direction:column;margin-top:8px;max-height:300px;overflow:auto;border-radius:var(--r-md)}
 .res{display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:center;gap:12px;padding:10px 4px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;width:100%}
 .res:last-child{border-bottom:0}
@@ -292,6 +313,8 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
     <button class="qa note" data-add="note"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>Notiz</button>
   </div>
 
+  <div id="nudge"></div>
+
   <div id="repeat-wrap" hidden>
     <div class="sec-head" style="margin-bottom:8px"><span class="sec-title" style="font-size:17px">Nochmal eintragen</span><span class="small muted">ein Tipp genügt</span></div>
     <div class="repeat" id="repeat"></div>
@@ -323,6 +346,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
     <div class="search-wrap">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
       <input class="input" id="food-q" type="search" placeholder="Lebensmittel suchen, z. B. Banane" autocomplete="off" aria-label="Lebensmittel suchen">
+      <button class="scan-btn" id="scan-btn" aria-label="Barcode scannen" title="Barcode scannen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 8v8M10 8v8M13 8v8M17 8v8"/></svg></button>
     </div>
     <div class="chips" id="food-cats" style="margin-top:12px"></div>
     <div class="results" id="food-res"></div>
@@ -342,7 +366,12 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 <!-- ============ REZEPTE ============ -->
 <section class="view" id="v-rezepte" aria-label="Rezepte">
   <div class="card" id="dayplan"></div>
+  <div id="light-wrap">
+    <div class="sec-head" style="margin-bottom:8px"><span class="sec-title" style="font-size:17px">Leichte Vorschläge</span><span class="small muted">bis 3 BE pro Portion</span></div>
+    <div class="light-row" id="light-row"></div>
+  </div>
   <div class="chips" id="r-filter"></div>
+  <div class="chips" id="r-kitchen"></div>
   <div class="r-grid" id="r-grid"></div>
 </section>
 
@@ -371,6 +400,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 <section class="view" id="v-alltag" aria-label="Alltag">
   <div class="card" id="plan-card"></div>
   <div class="card" id="goal-card"></div>
+  <div class="card" id="remind-card"></div>
   <div class="card">
     <div class="sec-head"><h2>Deine Muster</h2><div class="seg" id="pat-range" style="padding:3px"><button aria-pressed="false" data-d="7">7 T</button><button aria-pressed="true" data-d="14">14 T</button><button aria-pressed="false" data-d="30">30 T</button></div></div>
     <div id="patterns" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
@@ -501,12 +531,71 @@ const FOODS=[
  ['colazero','Cola zuckerfrei','Getränke',0,1,0,330],
  ['schorle','Apfelschorle','Getränke',5.5,24,0,300],
  ['kaffee','Kaffee schwarz','Getränke',0,2,0.2,200],
+ // Weltküche
+ ['bulgur','Bulgur, gekocht','Beilagen',19,83,3,150],
+ ['reisnudeln','Reisnudeln, gekocht','Beilagen',24,110,2,150],
+ ['kochbanane','Kochbanane, gegart','Beilagen',31,122,1.3,100],
+ ['pita','Fladenbrot / Pita','Brot & Getreide',55,275,9,60],
+ ['hummus','Hummus','Hülsenfrüchte',14,170,8,50],
+ ['aubergine','Aubergine','Gemüse',2.5,25,1,150],
+ ['mozzarella','Mozzarella','Milch & Eiweiß',1,250,18,60],
+ ['erdnussmus','Erdnussmus','Nüsse & Fette',12,600,25,15],
+ ['oliven','Oliven','Nüsse & Fette',1,145,1,30],
 ].map(([id,name,cat,kh,kcal,pr,portion])=>({id,name,cat,kh,kcal,pr,portion}));
 
 // ============================================================
 // REZEPTE — Zutaten in Gramm für die angegebene Portionszahl, Nährwerte werden daraus berechnet
 // ============================================================
 const RECIPES=[
+ // ---- Weltküche ----
+ {id:'asianudeln',name:'Reisnudel-Pfanne mit Tofu',kitchen:'Asiatisch',tags:['Mittag','Abend','Vegetarisch'],min:20,serv:2,
+  ing:[['reisnudeln',300],['tofu',200],['paprika',150],['karotte',100],['edamame',80],['olivenoel',10]],
+  why:'Tofu und Edamame machen satt, viel Gemüse sorgt für Volumen bei überschaubaren KH.',
+  steps:['Reisnudeln nach Packung garen und abtropfen lassen.','Tofu würfeln und in Öl knusprig braten, herausnehmen.','Paprika und Karotte in Streifen anbraten, Edamame dazugeben.','Nudeln und Tofu unterheben, mit Sojasauce, Ingwer und Limette abschmecken.']},
+ {id:'sushibowl',name:'Sushi-Bowl mit Lachs',kitchen:'Asiatisch',tags:['Mittag','Abend'],min:20,serv:2,
+  ing:[['reis',300],['lachs',200],['avocado',100],['gurke',150],['edamame',80]],
+  why:'Alles, was Sushi ausmacht, nur in der Schüssel: Reismenge gut abmessbar, viel Eiweiß.',
+  steps:['Reis kochen und mit etwas Reisessig abschmecken.','Lachs würfeln (Sushi-Qualität) oder kurz in der Pfanne garen.','Avocado und Gurke in Scheiben schneiden.','Alles auf dem Reis anrichten, mit Sesam und etwas Sojasauce servieren.']},
+ {id:'taboule',name:'Taboulé mit Kichererbsen',kitchen:'Orientalisch',tags:['Mittag','Vegetarisch'],min:15,serv:2,
+  ing:[['bulgur',250],['kichererbsen',150],['tomate',200],['gurke',150],['zwiebel',30],['olivenoel',15]],
+  why:'Frisch und kräuterreich, Bulgur und Kichererbsen liefern Ballaststoffe.',
+  steps:['Bulgur mit heißem Wasser übergießen und 10 Minuten quellen lassen.','Tomaten, Gurke und Zwiebel fein würfeln, viel Petersilie und Minze hacken.','Kichererbsen abspülen.','Alles mit Zitronensaft, Olivenöl, Salz und Pfeffer vermengen.']},
+ {id:'linsensuppe',name:'Rote Linsensuppe',kitchen:'Orientalisch',tags:['Mittag','Abend','Vegetarisch'],min:30,serv:3,
+  ing:[['linsen',150],['karotte',150],['zwiebel',80],['passata',150],['olivenoel',10],['joghurt',150]],
+  why:'Wärmend und einfach, Linsen bringen Eiweiß und Ballaststoffe mit.',
+  steps:['Zwiebel und Karotte würfeln und in Öl andünsten, Kreuzkümmel kurz mitrösten.','Linsen, Passata und 800 ml Brühe dazugeben, 20 Minuten köcheln.','Fein pürieren und mit Zitrone, Salz und Paprikapulver abschmecken.','Mit einem Klecks Joghurt servieren.']},
+ {id:'shakshuka',name:'Shakshuka mit Fladenbrot',kitchen:'Afrikanisch',tags:['Frühstück','Abend','Vegetarisch'],min:25,serv:2,
+  ing:[['ei',240],['passata',400],['paprika',200],['zwiebel',80],['feta',40],['olivenoel',10],['pita',120]],
+  why:'Eier in würziger Tomatensoße aus Nordafrika, das Brot ist die gut planbare KH-Portion.',
+  steps:['Zwiebel und Paprika in Öl weich dünsten, Kreuzkümmel und Paprikapulver dazu.','Passata einrühren und 10 Minuten einköcheln lassen.','Mulden formen, Eier hineinschlagen und zugedeckt stocken lassen.','Mit Feta und Kräutern bestreuen, mit Fladenbrot servieren.']},
+ {id:'maafe',name:'Maafe: Erdnuss-Eintopf mit Hähnchen',kitchen:'Afrikanisch',tags:['Mittag','Abend'],min:40,serv:3,
+  ing:[['haehnchen',360],['suesskartoffel',300],['erdnussmus',50],['passata',300],['zwiebel',80],['spinat',150],['kochbanane',300]],
+  why:'Westafrikanischer Klassiker: cremig durch Erdnuss, sättigend durch Hähnchen und Süßkartoffel.',
+  steps:['Hähnchen würfeln und mit Zwiebel anbraten.','Passata, Erdnussmus und 400 ml Wasser einrühren, Süßkartoffelwürfel dazugeben.','25 Minuten köcheln, zum Schluss den Spinat unterheben.','Kochbanane in Scheiben garen oder kurz anbraten und dazu servieren.']},
+ {id:'griechsalat',name:'Griechischer Salat mit Pita',kitchen:'Griechisch',tags:['Mittag','Abend','Vegetarisch'],min:10,serv:2,
+  ing:[['tomate',300],['gurke',200],['paprika',100],['zwiebel',40],['feta',150],['oliven',50],['olivenoel',15],['pita',120]],
+  why:'Viel Gemüse, Feta für Eiweiß, das Brot bestimmst du selbst.',
+  steps:['Tomaten, Gurke und Paprika grob schneiden, Zwiebel in Ringe.','Oliven dazugeben, mit Olivenöl, Oregano und etwas Essig mischen.','Feta obenauf legen.','Mit warmem Fladenbrot servieren.']},
+ {id:'souvlaki',name:'Hähnchen-Souvlaki mit Tzatziki',kitchen:'Griechisch',tags:['Mittag','Abend'],min:25,serv:2,
+  ing:[['haehnchen',300],['griechjoghurt',200],['gurke',150],['pita',120],['tomate',150],['salat',80],['olivenoel',10]],
+  why:'Viel Eiweiß vom Spieß, das Tzatziki ist leicht und frisch.',
+  steps:['Hähnchen würfeln, mit Öl, Zitrone, Oregano und Knoblauch marinieren und auf Spieße stecken.','Für das Tzatziki Gurke raspeln, ausdrücken und mit Joghurt und Knoblauch verrühren.','Spieße in der Pfanne oder auf dem Grill rundum braten.','Mit Pita, Tomaten und Salat servieren.']},
+ {id:'minestrone',name:'Minestrone',kitchen:'Italienisch',tags:['Mittag','Abend','Vegetarisch'],min:35,serv:3,
+  ing:[['zucchini',200],['karotte',150],['zwiebel',80],['passata',300],['kidney',200],['vknudeln',200],['olivenoel',10],['kaese',30]],
+  why:'Italienische Gemüsesuppe: viel Gemüse und Bohnen, Nudeln nur als Einlage.',
+  steps:['Zwiebel, Karotte und Zucchini würfeln und in Öl andünsten.','Passata und 1 l Brühe dazugeben, 15 Minuten köcheln.','Bohnen und gekochte Vollkornnudeln einrühren und kurz erhitzen.','Mit Basilikum und geriebenem Käse servieren.']},
+ {id:'melanzane',name:'Aubergine al forno mit Mozzarella',kitchen:'Italienisch',tags:['Abend','Vegetarisch'],min:40,serv:2,
+  ing:[['aubergine',500],['passata',300],['mozzarella',125],['olivenoel',15],['vollkornbrot',100]],
+  why:'Wie Lasagne, aber mit Auberginen statt Nudelplatten: wenig KH, viel Geschmack.',
+  steps:['Aubergine in Scheiben schneiden, mit Öl bestreichen und im Ofen oder in der Pfanne vorgaren.','Passata mit Knoblauch, Salz und Oregano würzen.','Abwechselnd Auberginen und Soße in eine Form schichten, Mozzarella darauf.','Bei 200 °C etwa 20 Minuten backen, mit Basilikum und Brot servieren.']},
+ {id:'ratatouille',name:'Ratatouille mit Hähnchen',kitchen:'Europäisch',tags:['Abend'],min:35,serv:2,
+  ing:[['aubergine',200],['zucchini',200],['paprika',200],['tomate',200],['zwiebel',80],['haehnchen',250],['olivenoel',15],['kartoffeln',300]],
+  why:'Französisches Schmorgemüse, dazu Hähnchen und Kartoffeln als klar abmessbare Beilage.',
+  steps:['Gemüse in Würfel schneiden.','Zwiebel in Öl anbraten, Aubergine, Zucchini und Paprika dazugeben.','Tomaten und Kräuter der Provence unterrühren und 20 Minuten schmoren.','Hähnchen separat braten, mit Ratatouille und gekochten Kartoffeln servieren.']},
+ {id:'kartoffelpfanne',name:'Kartoffel-Spinat-Pfanne mit Spiegelei',kitchen:'Europäisch',tags:['Mittag','Abend','Vegetarisch'],min:25,serv:2,
+  ing:[['kartoffeln',500],['spinat',200],['zwiebel',60],['ei',240],['butter',10]],
+  why:'Hausmannskost, die schnell geht: Kartoffeln mit Gemüse und Ei.',
+  steps:['Gekochte Kartoffeln in Scheiben schneiden und in Butter goldbraun braten.','Zwiebel dazugeben, dann den Spinat zusammenfallen lassen.','In einer zweiten Pfanne Spiegeleier braten.','Mit Salz, Pfeffer und Muskat würzen und zusammen servieren.']},
  {id:'oats',name:'Overnight Oats mit Beeren',tags:['Frühstück','Vegetarisch'],min:5,serv:1,
   ing:[['haferflocken',40],['milch',120],['joghurt',60],['blaubeeren',50],['himbeeren',30],['mandeln',10],['chia',5]],
   why:'Haferflocken und Chia liefern Ballaststoffe, die Beeren bringen Frische ohne viel Zucker.',
@@ -519,7 +608,7 @@ const RECIPES=[
   ing:[['griechjoghurt',150],['apfel',100],['walnuesse',15],['honig',5]],
   why:'Cremig und sättigend, die Süße kommt größtenteils vom Apfel.',
   steps:['Apfel waschen und in kleine Würfel schneiden.','Joghurt in eine Schale geben, Apfel und Walnüsse darauf verteilen.','Mit Zimt und einem Hauch Honig abschließen.']},
- {id:'curry',name:'Rotes Linsen-Curry mit Reis',tags:['Mittag','Abend','Vegetarisch'],min:30,serv:2,
+ {id:'curry',name:'Rotes Linsen-Curry mit Reis',kitchen:'Asiatisch',tags:['Mittag','Abend','Vegetarisch'],min:30,serv:2,
   ing:[['linsen',120],['kokosmilch',200],['passata',200],['karotte',150],['spinat',100],['zwiebel',80],['reis',240],['olivenoel',10]],
   why:'Linsen bringen viel Eiweiß und Ballaststoffe, der Reis bleibt eine kleine Beilage.',
   steps:['Zwiebel und Karotte würfeln und in Öl andünsten, 1 TL Currypulver kurz mitrösten.','Linsen, passierte Tomaten, Kokosmilch und 200 ml Wasser zugeben, 15 Minuten köcheln.','Spinat unterheben, abschmecken und mit dem gekochten Reis servieren.']},
@@ -527,7 +616,7 @@ const RECIPES=[
   ing:[['lachs',300],['kartoffeln',300],['brokkoli',250],['zucchini',200],['paprika',150],['olivenoel',15]],
   why:'Viel buntes Gemüse, eine überschaubare Portion Kartoffeln und Omega-3 aus dem Lachs.',
   steps:['Ofen auf 200 °C vorheizen. Kartoffeln halbieren und 15 Minuten vorbacken.','Gemüse schneiden, mit Öl, Salz und Kräutern mischen und zu den Kartoffeln geben.','Lachs obenauf legen und alles weitere 15 Minuten backen. Mit Zitrone servieren.']},
- {id:'pasta',name:'Vollkornpasta mit Tomaten-Hähnchen',tags:['Mittag','Abend'],min:25,serv:2,
+ {id:'pasta',name:'Vollkornpasta mit Tomaten-Hähnchen',kitchen:'Italienisch',tags:['Mittag','Abend'],min:25,serv:2,
   ing:[['vknudeln',360],['haehnchen',250],['passata',300],['zwiebel',60],['olivenoel',10],['kaese',20]],
   why:'Vollkornnudeln sättigen länger, Hähnchen macht das Gericht eiweißreich.',
   steps:['Nudeln nach Packungsangabe bissfest kochen.','Hähnchen in Streifen schneiden und mit der Zwiebel in Öl anbraten.','Passierte Tomaten zugeben, 10 Minuten köcheln, mit Basilikum und Käse servieren.']},
@@ -539,7 +628,7 @@ const RECIPES=[
   ing:[['ei',180],['spinat',60],['champignons',80],['paprika',60],['milch',30],['olivenoel',5]],
   why:'Sehr wenige Kohlenhydrate, viel Gemüse und Eiweiß.',
   steps:['Pilze und Paprika in Öl anbraten, Spinat kurz zusammenfallen lassen.','Eier mit Milch verquirlen und über das Gemüse gießen.','Bei kleiner Hitze stocken lassen und zusammenklappen.']},
- {id:'kichererbsen',name:'Kichererbsen-Salat mit Feta',tags:['Mittag','Vegetarisch'],min:15,serv:2,
+ {id:'kichererbsen',name:'Kichererbsen-Salat mit Feta',kitchen:'Griechisch',tags:['Mittag','Vegetarisch'],min:15,serv:2,
   ing:[['kichererbsen',240],['gurke',200],['tomate',200],['zwiebel',40],['feta',80],['olivenoel',15]],
   why:'Hülsenfrüchte liefern Kohlenhydrate zusammen mit viel Ballaststoff und Eiweiß.',
   steps:['Kichererbsen abspülen und abtropfen lassen.','Gurke, Tomaten und Zwiebel klein schneiden.','Alles mit Öl, Zitrone, Salz und Petersilie mischen und Feta darüberbröseln.']},
@@ -559,18 +648,18 @@ const RECIPES=[
 const IMG_BASE='img/';
 function imgSrc(id){return (window.RECIPE_IMAGES&&window.RECIPE_IMAGES[id])||IMG_BASE+id+'.jpg';}
 function thumb(f){
-  const src=(window.FOOD_IMAGES&&window.FOOD_IMAGES[f.id])||(f.cat==='Eigene'?'':IMG_BASE+'food/'+f.id+'.jpg');
-  return src?`<img class="thumb" src="${src}" alt="" loading="lazy">`:`<span class="thumb" aria-hidden="true">${esc(f.name.charAt(0).toUpperCase())}</span>`;
+  const src=(window.FOOD_IMAGES&&window.FOOD_IMAGES[f.id])||f.img||(f.cat==='Eigene'||f.cat==='Gescannt'?'':IMG_BASE+'food/'+f.id+'.jpg');
+  return src?`<img class="thumb" src="${esc(src)}" alt="" loading="lazy">`:`<span class="thumb" aria-hidden="true">${esc(f.name.charAt(0).toUpperCase())}</span>`;
 }
 
 // ============================================================
 // ZUSTAND & SPEICHERUNG — nur lokal im Browser
 // ============================================================
 const STORE_KEY='morehealth.v2';
-const DEFAULTS={entries:[],custom:[],favs:[],calc:[],plan:{text:'',carry:'',contact:'',phone:'',team:''},day:{b:null,m:null,a:null},goal:null,settings:{name:'',unit:'mgdl',low:70,high:180}};
+const DEFAULTS={entries:[],custom:[],favs:[],calc:[],plan:{text:'',carry:'',contact:'',phone:'',team:''},day:{b:null,m:null,a:null},goal:null,remind:{active:false,b:{on:true,t:'08:00'},m:{on:true,t:'12:30'},a:{on:true,t:'18:30'},bz:{on:false,t:'07:00'},done:{d:'',k:[]}},settings:{name:'',unit:'mgdl',low:70,high:180}};
 let S=load();
 function load(){
-  try{const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(d)return Object.assign(structuredClone(DEFAULTS),d,{settings:Object.assign({},DEFAULTS.settings,d.settings||{}),plan:Object.assign({},DEFAULTS.plan,d.plan||{})});}catch(_){}
+  try{const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(d)return Object.assign(structuredClone(DEFAULTS),d,{settings:Object.assign({},DEFAULTS.settings,d.settings||{}),plan:Object.assign({},DEFAULTS.plan,d.plan||{}),remind:Object.assign(structuredClone(DEFAULTS.remind),d.remind||{})});}catch(_){}
   return structuredClone(DEFAULTS);
 }
 function save(){try{localStorage.setItem(STORE_KEY,JSON.stringify(S));}catch(_){}}
@@ -588,7 +677,7 @@ const dayKey=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMont
 const timeStr=ts=>new Date(ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 // Fett ist nicht in der Tabelle: geschätzt aus den restlichen Kalorien (kcal − 4·KH − 4·Eiweiß) / 9
-function macros(items){let kh=0,kcal=0,pr=0,fat=0;items.forEach(([id,g])=>{const f=food(id);if(f){kh+=f.kh*g/100;kcal+=f.kcal*g/100;pr+=f.pr*g/100;fat+=Math.max(0,f.kcal-4*f.kh-4*f.pr)/9*g/100;}});return{kh,kcal,pr,fat,be:kh/12,ke:kh/10};}
+function macros(items){let kh=0,kcal=0,pr=0,fat=0;items.forEach(([id,g])=>{const f=food(id);if(f){kh+=f.kh*g/100;kcal+=f.kcal*g/100;pr+=f.pr*g/100;fat+=(f.fat!=null?f.fat:Math.max(0,f.kcal-4*f.kh-4*f.pr)/9)*g/100;}});return{kh,kcal,pr,fat,be:kh/12,ke:kh/10};}
 // Blutzucker wird immer in mg/dL gespeichert und nur für die Anzeige umgerechnet
 const MMOL=18.016;
 const bzShow=v=>S.settings.unit==='mmol'?fmt(v/MMOL):String(Math.round(v));
@@ -639,7 +728,7 @@ function openSheet(html,onMount){
   const f=$('#sheet-body').querySelector('[autofocus]')||$('#sheet-body').querySelector('button,input');
   if(f)setTimeout(()=>f.focus({preventScroll:true}),60);
 }
-function closeSheet(){$('#scrim').classList.remove('on');$('#sheet').classList.remove('on');if(lastFocus)lastFocus.focus({preventScroll:true});}
+function closeSheet(){stopScan();$('#scrim').classList.remove('on');$('#sheet').classList.remove('on');if(lastFocus)lastFocus.focus({preventScroll:true});}
 $('#scrim').addEventListener('click',closeSheet);
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sheet').classList.contains('on'))closeSheet();});
 // Bestätigung direkt im Sheet statt Browser-Dialog
@@ -753,6 +842,7 @@ function renderHeute(){
   S.entries.filter(e=>e.type==='meal').sort((a,b)=>b.ts-a.ts).forEach(e=>{const k=e.name.toLowerCase();if(!seen.has(k)&&rec.length<6){seen.add(k);rec.push(e);}});
   $('#repeat-wrap').hidden=!rec.length;
   $('#repeat').innerHTML=rec.map(e=>`<button data-repeat="${e.id}"><span class="n">${esc(e.name)}</span><span class="k num">${Math.round(e.kh)} g KH · ${fmt(e.kh/12)} BE</span></button>`).join('');
+  renderNudge();
   $('#sos-sub').textContent=S.plan.text?'Dein Plan ist hinterlegt':'Jetzt anlegen, damit er griffbereit ist';
   const pool=S.favs.length?RECIPES.filter(r=>S.favs.includes(r.id)):RECIPES;
   const tag=h<11?'Frühstück':h<15?'Mittag':h<18?'Snack':'Abend';
@@ -841,9 +931,164 @@ $('#calc-custom').onclick=()=>{
 };
 
 // ============================================================
+// BARCODE-SCANNER — Kamera (BarcodeDetector oder ZXing) + Open Food Facts
+// ============================================================
+let scanStop=null;
+function stopScan(){if(scanStop){const f=scanStop;scanStop=null;f();}}
+const numOr=v=>{const x=parseFloat(v);return isFinite(x)?x:null;};
+$('#scan-btn').onclick=openScan;
+function openScan(){
+  openSheet(`<h3 id="sheet-title">Barcode scannen</h3><div class="stack">
+    <div class="scan-box"><video id="sc-video" playsinline muted></video><div class="scan-frame"></div><p class="scan-msg" id="sc-msg">Kamera wird gestartet …</p></div>
+    <div class="field"><label for="sc-code">Oder die Nummer unter dem Barcode eintippen</label><div style="display:flex;gap:8px"><input class="input num" id="sc-code" inputmode="numeric" autocomplete="off" placeholder="z. B. 4000417025005"><button class="btn btn-primary" id="sc-go">Suchen</button></div></div>
+    <p class="hint">Produktdaten von Open Food Facts, einer freien Datenbank (ODbL). Werte bitte kurz mit der Packung vergleichen.</p></div>`,el=>{
+    const go=()=>{const c=el.querySelector('#sc-code').value.replace(/\D/g,'');if(c.length<8){toast('Bitte die Nummer unter dem Barcode eingeben');return;}stopScan();lookupBarcode(c);};
+    el.querySelector('#sc-go').onclick=go;
+    el.querySelector('#sc-code').addEventListener('keydown',e=>{if(e.key==='Enter')go();});
+    startCamera(el);
+  });
+}
+async function startCamera(el){
+  const v=el.querySelector('#sc-video'),msg=el.querySelector('#sc-msg');
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){msg.textContent='Kamera ist hier nicht verfügbar. Tipp die Nummer unten ein.';return;}
+  let stream;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});}
+  catch(_){msg.textContent='Kein Kamerazugriff. Erlaube die Kamera oder tipp die Nummer unten ein.';return;}
+  // Sheet wurde inzwischen geschlossen: Kamera sofort wieder aus
+  if(!v.isConnected||!$('#sheet').classList.contains('on')){stream.getTracks().forEach(t=>t.stop());return;}
+  let stopped=false,reader=null;
+  scanStop=()=>{stopped=true;if(reader){try{reader.reset();}catch(_){}}stream.getTracks().forEach(t=>t.stop());};
+  v.srcObject=stream;try{await v.play();}catch(_){}
+  msg.textContent='Halte den Barcode in den Rahmen';
+  const found=code=>{if(stopped)return;if(navigator.vibrate)navigator.vibrate(60);stopScan();lookupBarcode(code);};
+  if('BarcodeDetector' in window){
+    try{const det=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e']});
+      const tick=async()=>{if(stopped)return;try{const r=await det.detect(v);if(r.length){found(r[0].rawValue);return;}}catch(_){}setTimeout(tick,200);};
+      tick();return;}catch(_){}
+  }
+  try{await loadZXing();if(stopped)return;reader=new ZXing.BrowserMultiFormatReader();reader.decodeFromStream(stream,v,res=>{if(res)found(res.getText());}).catch(()=>{});}
+  catch(_){msg.textContent='Scanner konnte nicht geladen werden. Tipp die Nummer unten ein.';}
+}
+function loadZXing(){
+  if(window.ZXing)return Promise.resolve();
+  return new Promise((ok,no)=>{const sc=document.createElement('script');sc.src='vendor/zxing.min.js';sc.onload=ok;sc.onerror=no;document.head.appendChild(sc);});
+}
+function scanFail(title,text){
+  openSheet(`<h3 id="sheet-title">${esc(title)}</h3><div class="stack"><p class="muted" style="margin:0">${esc(text)}</p>
+    <button class="btn btn-primary btn-block" id="sf-again">Nochmal scannen</button><button class="btn btn-soft btn-block" id="sf-own">Selbst anlegen</button></div>`,el=>{
+    el.querySelector('#sf-again').onclick=openScan;
+    el.querySelector('#sf-own').onclick=()=>{go('rechner');$('#calc-custom').onclick();};
+  });
+}
+async function lookupBarcode(code){
+  const known=S.custom.find(f=>f.barcode===code);
+  if(known){showProduct(known);return;}
+  openSheet(`<h3 id="sheet-title">Produkt wird gesucht …</h3><p class="muted num" style="margin:0">Barcode ${esc(code)}</p>`);
+  let p=null;
+  try{
+    const r=await fetch('https://world.openfoodfacts.org/api/v2/product/'+encodeURIComponent(code)+'.json?fields=product_name,product_name_de,brands,nutriments,image_front_small_url,serving_quantity');
+    if(r.ok){const d=await r.json();if(d.status===1)p=d.product;}
+    else if(r.status!==404)throw new Error('http');
+  }catch(_){scanFail('Keine Verbindung','Die Produktdatenbank ist gerade nicht erreichbar. Prüf deine Internetverbindung oder leg das Lebensmittel selbst an.');return;}
+  const n=(p&&p.nutriments)||{},kh=numOr(n.carbohydrates_100g);
+  if(!p){scanFail('Produkt nicht gefunden','Dieser Barcode ist in Open Food Facts noch nicht eingetragen. Du kannst die Werte von der Packung selbst eintragen.');return;}
+  if(kh==null){scanFail('Keine KH-Angabe','Zu diesem Produkt fehlen die Kohlenhydrate in der Datenbank. Trag die Werte von der Packung selbst ein.');return;}
+  const kcal=numOr(n['energy-kcal_100g'])??((numOr(n.energy_100g)||0)/4.184),fat=numOr(n.fat_100g);
+  const brand=(p.brands||'').split(',')[0].trim(),name=(p.product_name_de||p.product_name||'Produkt').trim();
+  const img=/^https:\/\//.test(p.image_front_small_url||'')?p.image_front_small_url:'';
+  showProduct({id:'bc'+code,barcode:code,name:name+(brand&&!name.includes(brand)?' ('+brand+')':''),cat:'Gescannt',kh:r1(kh),kcal:Math.round(kcal),pr:r1(numOr(n.proteins_100g)||0),fat:fat==null?null:r1(fat),portion:Math.round(numOr(p.serving_quantity)||100),img});
+}
+function showProduct(f){
+  let g=f.portion||100;
+  openSheet(`<h3 id="sheet-title">${esc(f.name)}</h3><div class="stack">
+    ${f.img?`<img src="${esc(f.img)}" alt="" style="max-height:150px;max-width:60%;object-fit:contain;border-radius:12px;align-self:center;background:#fff">`:''}
+    <div><span class="label">Pro 100 g</span><div class="r-macros" style="margin-top:6px"><div class="carb"><div class="v num">${fmt(f.kh)}</div><div class="k">g KH</div></div><div><div class="v num">${Math.round(f.kcal)}</div><div class="k">kcal</div></div><div><div class="v num">${fmt(f.pr)}</div><div class="k">g Eiweiß</div></div><div><div class="v num">${f.fat==null?'–':fmt(f.fat)}</div><div class="k">g Fett</div></div></div></div>
+    <div class="sec-head" style="align-items:center"><span class="sec-title" style="font-size:17px">Menge</span>
+      <div class="stepper"><button id="pr-minus" aria-label="10 g weniger">−</button><input class="num" id="pr-g" type="number" inputmode="numeric" aria-label="Menge in Gramm"><button id="pr-plus" aria-label="10 g mehr">+</button></div></div>
+    <div class="totals" id="pr-tot"></div>
+    <button class="btn btn-primary btn-block" id="pr-add">Zur Mahlzeit hinzufügen</button>
+    <p class="hint">Quelle: Open Food Facts. Das Produkt wird unter „Gescannt“ gespeichert, damit du es beim nächsten Mal direkt findest.</p></div>`,el=>{
+    const inp=el.querySelector('#pr-g');
+    const upd=()=>{inp.value=g;const kh=f.kh*g/100;el.querySelector('#pr-tot').innerHTML=`<div><div class="v num">${fmt(kh)}</div><div class="k">g KH</div></div><div><div class="v num">${fmt(kh/12)}</div><div class="k">BE</div></div><div><div class="v num">${fmt(kh/10)}</div><div class="k">KE</div></div>`;};upd();
+    el.querySelector('#pr-minus').onclick=()=>{g=Math.max(5,g-10);upd();};
+    el.querySelector('#pr-plus').onclick=()=>{g=Math.min(2000,g+10);upd();};
+    inp.addEventListener('input',()=>{const v=parseInt(inp.value);if(v>0&&v<=2000){g=v;upd();}});
+    el.querySelector('#pr-add').onclick=()=>{
+      S.custom=S.custom.filter(x=>x.id!==f.id).concat(Object.assign({},f,{portion:g}));
+      S.calc.push([f.id,g]);save();closeSheet();go('rechner');renderRechner();toast(f.name+' hinzugefügt');
+    };
+  });
+}
+
+// ============================================================
+// ERINNERUNGEN — als Termine im Handy-Kalender + Hinweis in der App
+// ============================================================
+const REMS=[{k:'bz',l:'Messwert',title:'Messwert eintragen'},{k:'b',l:'Frühstück',title:'Frühstück eintragen',meal:'Frühstück'},{k:'m',l:'Mittagessen',title:'Mittagessen eintragen',meal:'Mittagessen'},{k:'a',l:'Abendessen',title:'Abendessen eintragen',meal:'Abendessen'}];
+function renderRemind(){
+  const R=S.remind,box=$('#remind-card');if(!box)return;
+  if(!R.active){box.innerHTML=`<h2>Erinnerungen</h2><p class="muted small" style="margin:6px 0 12px">Lass dich zu deinen Mahlzeiten oder zum Messen erinnern, damit dein Tagebuch vollständig bleibt.</p><button class="btn btn-primary btn-block" data-remind>Erinnerungen einrichten</button>`;return;}
+  const on=REMS.filter(r=>R[r.k].on);
+  box.innerHTML=`<div class="sec-head"><h2>Erinnerungen</h2><button data-remind style="background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer">Ändern</button></div>
+    <p class="small muted" style="margin:6px 0 0">${on.length?on.map(r=>esc(r.l)+' '+R[r.k].t).join(' · '):'Alle Erinnerungen sind aus.'}</p>`;
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-remind]'))openRemind();});
+function openRemind(){
+  const R=structuredClone(S.remind);
+  openSheet(`<h3 id="sheet-title">Erinnerungen</h3><div class="stack">
+    <p class="muted small" style="margin:0">Wähle, woran und wann du erinnert werden möchtest.</p>
+    <div>${REMS.map(r=>`<div class="rem-row"><label><input type="checkbox" data-rk="${r.k}" ${R[r.k].on?'checked':''}>${esc(r.l)}</label><input class="input num" type="time" data-rt="${r.k}" value="${R[r.k].t}" aria-label="Uhrzeit ${esc(r.l)}"></div>`).join('')}</div>
+    <button class="btn btn-primary btn-block" id="rm-cal">Speichern und in den Kalender</button>
+    <button class="btn btn-soft btn-block" id="rm-save">Nur in der App erinnern</button>
+    <p class="hint">Über den Kalender meldet sich dein Handy pünktlich, auch wenn die App geschlossen ist. In der App siehst du zusätzlich auf „Heute“ einen Hinweis, wenn noch etwas fehlt.</p></div>`,el=>{
+    const read=()=>{REMS.forEach(r=>{R[r.k].on=el.querySelector(`[data-rk="${r.k}"]`).checked;const t=el.querySelector(`[data-rt="${r.k}"]`).value;if(/^\d\d:\d\d$/.test(t))R[r.k].t=t;});R.active=true;S.remind=R;save();render();};
+    el.querySelector('#rm-save').onclick=()=>{read();closeSheet();toast('Erinnerungen gespeichert');};
+    el.querySelector('#rm-cal').onclick=async()=>{read();if(!REMS.some(r=>R[r.k].on)){toast('Wähle mindestens eine Erinnerung');return;}
+      const ok=await saveICS(buildICS());closeSheet();toast(ok?'Kalender-Datei geöffnet: dort „Hinzufügen“ tippen':'Hier nicht möglich, in der installierten App schon');};
+  });
+}
+function buildICS(){
+  const pad=n=>String(n).padStart(2,'0'),now=new Date(),d=now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate());
+  const stamp=now.toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//More Health//DE','CALSCALE:GREGORIAN','METHOD:PUBLISH'];
+  REMS.forEach(r=>{const x=S.remind[r.k];if(!x.on)return;const [h,m]=x.t.split(':');
+    L.push('BEGIN:VEVENT','UID:morehealth-'+r.k+'@more-health.app','DTSTAMP:'+stamp,'DTSTART:'+d+'T'+h+m+'00','DURATION:PT5M','RRULE:FREQ=DAILY','SUMMARY:More Health: '+r.title,'DESCRIPTION:Kurz in More Health festhalten.','BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+r.title,'TRIGGER:PT0M','END:VALARM','END:VEVENT');});
+  L.push('END:VCALENDAR');return L.join('\r\n');
+}
+async function saveICS(text){
+  if(window.RECIPE_IMAGES)return false; // Vorschau-Fenster: Kalender-Dateien sind dort gesperrt
+  try{
+    // iPhone: Datei direkt öffnen, dann bietet iOS „Alle hinzufügen“ an
+    if(/iPad|iPhone|iPod/.test(navigator.userAgent)){location.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(text);return true;}
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/calendar'}));a.download='more-health-erinnerungen.ics';document.body.appendChild(a);a.click();a.remove();return true;
+  }catch(_){return false;}
+}
+// Hinweis auf „Heute“: Uhrzeit vorbei und noch nichts eingetragen
+function renderNudge(){
+  const R=S.remind,box=$('#nudge');if(!box)return;
+  const today=dayKey(Date.now());if(R.done.d!==today)R.done={d:today,k:[]};
+  if(!R.active){box.innerHTML='';return;}
+  const now=new Date(),mins=now.getHours()*60+now.getMinutes();
+  const todays=S.entries.filter(e=>dayKey(e.ts)===today);
+  const open=REMS.filter(r=>{const x=R[r.k];if(!x.on||R.done.k.includes(r.k))return false;const [h,m]=x.t.split(':').map(Number);if(mins<h*60+m)return false;
+    return r.k==='bz'?!todays.some(e=>e.type==='bz'):!todays.some(e=>e.type==='meal'&&e.meal===r.meal);});
+  const r=open[open.length-1];
+  box.innerHTML=r?`<div class="nudge"><span style="flex:1;min-width:0"><span class="t">${esc(r.l)} eintragen?</span><br><span class="small muted">Erinnerung ${R[r.k].t} Uhr</span></span><span class="acts"><button style="background:var(--surface);color:var(--ink-2)" data-nd="${r.k}" aria-label="Erinnerung für heute ausblenden">Später</button><button style="background:var(--brand);color:#fff" ${r.k==='bz'?'data-add="bz"':'data-go="rechner"'}>Eintragen</button></span></div>`:'';
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-nd]');if(!b)return;S.remind.done.k.push(b.dataset.nd);save();renderNudge();});
+
+// ============================================================
 // REZEPTE
 // ============================================================
-let rFilter='Alle';
+let rFilter='Alle',rKitchen='Alle Küchen';
+const KITCHENS=['Asiatisch','Orientalisch','Afrikanisch','Europäisch','Griechisch','Italienisch'];
+// „Leicht“: höchstens 3 BE pro Portion und satt machend (mind. 15 g Eiweiß oder viel Gemüse)
+const VEG=new Set(FOODS.filter(f=>f.cat==='Gemüse').map(f=>f.id));
+function isLight(r){const m=macros(r.ing),p=r.serv;const veg=r.ing.filter(([id])=>VEG.has(id)).reduce((a,[,g])=>a+g,0)/p;return m.be/p<=3&&(m.pr/p>=15||veg>=200);}
+function renderLight(){
+  const list=RECIPES.filter(isLight).map(r=>({r,m:macros(r.ing)})).sort((a,b)=>a.m.be/a.r.serv-b.m.be/b.r.serv);
+  $('#light-wrap').hidden=!list.length;
+  $('#light-row').innerHTML=list.map(({r,m})=>`<button class="light-card" data-recipe="${r.id}"><img src="${imgSrc(r.id)}" alt="" loading="lazy"><div class="b"><span class="t">${esc(r.name)}</span><span style="display:flex;gap:5px;flex-wrap:wrap"><span class="pill pill-carb num">${fmt(m.be/r.serv)} BE</span><span class="pill pill-brand num">${Math.round(m.pr/r.serv)} g Eiweiß</span></span></div></button>`).join('');
+}
 const SLOTS=[{k:'b',label:'Frühstück',tag:'Frühstück',meal:'Frühstück'},{k:'m',label:'Mittagessen',tag:'Mittag',meal:'Mittagessen'},{k:'a',label:'Abendessen',tag:'Abend',meal:'Abendessen'}];
 const slotItems=sl=>{const r=RECIPES.find(x=>x.id===sl.id);return r?r.ing.map(([fid,g])=>[fid,Math.round(g*sl.portions/r.serv)]):[];};
 // ============================================================
@@ -951,14 +1196,18 @@ function openSlot(slotK){
 }
 function renderRezepte(){
   renderDayplan();
-  const fs=['Alle','Favoriten','Frühstück','Mittag','Abend','Snack','Vegetarisch'];
+  renderLight();
+  const fs=['Alle','Favoriten','Leicht','Frühstück','Mittag','Abend','Snack','Vegetarisch'];
   $('#r-filter').innerHTML=fs.map(f=>`<button class="chip" aria-pressed="${f===rFilter}" data-rf="${f}">${f}</button>`).join('');
-  const list=RECIPES.filter(r=>rFilter==='Alle'||(rFilter==='Favoriten'?S.favs.includes(r.id):r.tags.includes(rFilter)));
+  $('#r-kitchen').innerHTML=['Alle Küchen',...KITCHENS].map(k=>`<button class="chip" aria-pressed="${k===rKitchen}" data-rk="${k}">${k}</button>`).join('');
+  const list=RECIPES.filter(r=>(rFilter==='Alle'||(rFilter==='Favoriten'?S.favs.includes(r.id):rFilter==='Leicht'?isLight(r):r.tags.includes(rFilter)))&&(rKitchen==='Alle Küchen'||r.kitchen===rKitchen));
   $('#r-grid').innerHTML=list.length?list.map(r=>{const m=macros(r.ing);const fav=S.favs.includes(r.id);return`<div class="r-card"><button style="all:unset;cursor:pointer;display:flex;flex-direction:column" data-recipe="${r.id}" aria-label="${esc(r.name)} öffnen"><img src="${imgSrc(r.id)}" alt="" loading="lazy"><div class="b"><div class="t">${esc(r.name)}</div><div class="meta"><span class="pill pill-carb num">${fmt(m.be/r.serv)} BE</span><span class="pill pill-brand">${r.min} Min.</span></div></div></button>
     <button class="fav" data-fav="${r.id}" aria-pressed="${fav}" aria-label="${fav?'Aus Favoriten entfernen':'Zu Favoriten'}">${fav?ICON.heartFull:ICON.heart}</button></div>`;}).join('')
-    :`<div class="card empty" style="grid-column:1/-1"><b>Noch keine Favoriten</b>Tippe auf das Herz bei einem Rezept, um es hier zu sammeln.</div>`;
+    :rFilter==='Favoriten'?`<div class="card empty" style="grid-column:1/-1"><b>Noch keine Favoriten</b>Tippe auf das Herz bei einem Rezept, um es hier zu sammeln.</div>`
+    :`<div class="card empty" style="grid-column:1/-1"><b>Keine passenden Rezepte</b>Wähle einen anderen Filter oder „Alle Küchen“.</div>`;
 }
 $('#r-filter').addEventListener('click',e=>{const b=e.target.closest('[data-rf]');if(!b)return;rFilter=b.dataset.rf;renderRezepte();});
+$('#r-kitchen').addEventListener('click',e=>{const b=e.target.closest('[data-rk]');if(!b)return;rKitchen=b.dataset.rk;renderRezepte();});
 document.addEventListener('click',e=>{
   const f=e.target.closest('[data-fav]');
   if(f){const id=f.dataset.fav;S.favs=S.favs.includes(id)?S.favs.filter(x=>x!==id):S.favs.concat(id);save();render();toast(S.favs.includes(id)?'Zu Favoriten hinzugefügt':'Aus Favoriten entfernt');return;}
@@ -970,7 +1219,7 @@ function openRecipe(id){
     return`<div class="r-macros"><div class="carb"><div class="v num">${Math.round(m.kh)}</div><div class="k">g KH</div></div><div class="carb"><div class="v num">${fmt(m.be)}</div><div class="k">BE</div></div><div class="carb"><div class="v num">${fmt(m.ke)}</div><div class="k">KE</div></div><div><div class="v num">${Math.round(m.kcal)}</div><div class="k">kcal</div></div></div>
     <div class="card" style="padding:6px 18px">${ing.map(([fid,g])=>{const f=food(fid);return`<div class="ing"><span>${esc(f.name)}</span><span class="num muted">${Math.round(g)} g · ${fmt(f.kh*g/100)} g KH</span></div>`;}).join('')}</div>`;};
   openSheet(`<img class="r-hero" src="${imgSrc(r.id)}" alt="${esc(r.name)}"><h3 id="sheet-title">${esc(r.name)}</h3><div class="stack">
-    <div style="display:flex;gap:6px;flex-wrap:wrap">${r.tags.map(t=>`<span class="pill pill-brand">${esc(t)}</span>`).join('')}<span class="pill pill-note">${r.min} Min.</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">${r.kitchen?`<span class="pill pill-carb">${esc(r.kitchen)}</span>`:''}${r.tags.map(t=>`<span class="pill pill-brand">${esc(t)}</span>`).join('')}<span class="pill pill-note">${r.min} Min.</span></div>
     <p class="muted" style="margin:0">${esc(r.why)}</p>
     <div class="sec-head" style="align-items:center"><span class="sec-title" style="font-size:17px">Portionen</span>
       <div class="stepper"><button id="p-minus" aria-label="Eine Portion weniger">−</button><input class="num" id="p-val" value="1" readonly aria-label="Portionen"><button id="p-plus" aria-label="Eine Portion mehr">+</button></div></div>
@@ -1091,7 +1340,7 @@ document.addEventListener('click',e=>{
 // ALLTAG: Notfallplan, Muster, Bericht, Unterwegs, Tausch-Ideen
 // ============================================================
 let patDays=14;
-function renderAlltag(){renderPlan();renderGoal();renderPatterns();renderSwaps();}
+function renderAlltag(){renderPlan();renderGoal();renderRemind();renderPatterns();renderSwaps();}
 function renderPlan(){
   const p=S.plan;const box=$('#plan-card');
   if(!p.text&&!p.phone&&!p.team){
