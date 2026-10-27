@@ -229,6 +229,28 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 .r-macros .v{font-family:var(--f-display);font-weight:700;font-size:20px}
 .r-macros .k{font-size:12px;color:var(--ink-2)}
 .r-macros .carb .v{color:var(--carb)}
+/* Tagesplan: drei Slots, darunter Tagessumme und Makro-Verteilung */
+.dp-slot{display:flex;align-items:center;gap:12px;width:100%;padding:10px 0;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;color:inherit;cursor:pointer}
+.dp-slot:last-of-type{border-bottom:0}
+.dp-slot img,.dp-slot .add{width:52px;height:52px;border-radius:12px;object-fit:cover;flex-shrink:0}
+.dp-slot .add{border:1.5px dashed var(--line);display:grid;place-items:center;color:var(--brand);font-size:24px;font-weight:600}
+.dp-slot .k{display:block;font-size:12.5px;color:var(--ink-3);font-weight:600}
+.dp-slot .t{flex:1;min-width:0}
+.dp-slot .n{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dp-slot .v{margin-left:auto;font-weight:700;color:var(--carb);white-space:nowrap}
+.c-mac{grid-column:1/-1;display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13.5px;color:var(--ink-2);border-top:1px solid rgba(0,0,0,.06);padding-top:10px;margin-top:2px}
+.c-mac b{color:var(--ink)}
+.goal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.goal-grid>div{background:var(--surface-2);border-radius:var(--r-sm);padding:12px}
+.goal-grid .v{font-family:var(--f-display);font-weight:700;font-size:22px}
+.goal-grid .k{font-size:12.5px;color:var(--ink-2)}
+.dp-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--surface-2)}
+.dp-bar span{display:block;height:100%}
+.dp-legend{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;font-size:13px;color:var(--ink-2)}
+.dp-legend b{display:block;font-family:var(--f-display);font-size:18px;color:var(--ink)}
+.dp-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.pick{display:flex;align-items:center;gap:12px;width:100%;padding:8px 0;background:none;border:0;border-bottom:1px solid var(--line);text-align:left;font:inherit;color:inherit;cursor:pointer}
+.pick img{width:56px;height:56px;border-radius:12px;object-fit:cover}
 .ing{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
 .ing:last-child{border-bottom:0}
 .steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
@@ -294,6 +316,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
     <div><div class="v num" id="c-kh">0</div><div class="k">g KH</div></div>
     <div><div class="v num" id="c-be">0</div><div class="k">BE (12 g)</div></div>
     <div><div class="v num" id="c-ke">0</div><div class="k">KE (10 g)</div></div>
+    <div class="c-mac num" id="c-mac"></div>
   </div>
 
   <div class="card">
@@ -318,6 +341,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 
 <!-- ============ REZEPTE ============ -->
 <section class="view" id="v-rezepte" aria-label="Rezepte">
+  <div class="card" id="dayplan"></div>
   <div class="chips" id="r-filter"></div>
   <div class="r-grid" id="r-grid"></div>
 </section>
@@ -346,6 +370,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
 <!-- ============ ALLTAG ============ -->
 <section class="view" id="v-alltag" aria-label="Alltag">
   <div class="card" id="plan-card"></div>
+  <div class="card" id="goal-card"></div>
   <div class="card">
     <div class="sec-head"><h2>Deine Muster</h2><div class="seg" id="pat-range" style="padding:3px"><button aria-pressed="false" data-d="7">7 T</button><button aria-pressed="true" data-d="14">14 T</button><button aria-pressed="false" data-d="30">30 T</button></div></div>
     <div id="patterns" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
@@ -542,7 +567,7 @@ function thumb(f){
 // ZUSTAND & SPEICHERUNG — nur lokal im Browser
 // ============================================================
 const STORE_KEY='morehealth.v2';
-const DEFAULTS={entries:[],custom:[],favs:[],calc:[],plan:{text:'',carry:'',contact:'',phone:'',team:''},settings:{name:'',unit:'mgdl',low:70,high:180}};
+const DEFAULTS={entries:[],custom:[],favs:[],calc:[],plan:{text:'',carry:'',contact:'',phone:'',team:''},day:{b:null,m:null,a:null},goal:null,settings:{name:'',unit:'mgdl',low:70,high:180}};
 let S=load();
 function load(){
   try{const d=JSON.parse(localStorage.getItem(STORE_KEY)||'null');if(d)return Object.assign(structuredClone(DEFAULTS),d,{settings:Object.assign({},DEFAULTS.settings,d.settings||{}),plan:Object.assign({},DEFAULTS.plan,d.plan||{})});}catch(_){}
@@ -562,7 +587,8 @@ const fmt=n=>r1(n).toLocaleString('de-DE');
 const dayKey=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');};
 const timeStr=ts=>new Date(ts).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-function macros(items){let kh=0,kcal=0,pr=0;items.forEach(([id,g])=>{const f=food(id);if(f){kh+=f.kh*g/100;kcal+=f.kcal*g/100;pr+=f.pr*g/100;}});return{kh,kcal,pr,be:kh/12,ke:kh/10};}
+// Fett ist nicht in der Tabelle: geschätzt aus den restlichen Kalorien (kcal − 4·KH − 4·Eiweiß) / 9
+function macros(items){let kh=0,kcal=0,pr=0,fat=0;items.forEach(([id,g])=>{const f=food(id);if(f){kh+=f.kh*g/100;kcal+=f.kcal*g/100;pr+=f.pr*g/100;fat+=Math.max(0,f.kcal-4*f.kh-4*f.pr)/9*g/100;}});return{kh,kcal,pr,fat,be:kh/12,ke:kh/10};}
 // Blutzucker wird immer in mg/dL gespeichert und nur für die Anzeige umgerechnet
 const MMOL=18.016;
 const bzShow=v=>S.settings.unit==='mmol'?fmt(v/MMOL):String(Math.round(v));
@@ -769,6 +795,7 @@ function renderResults(){
 }
 function renderCalc(){
   const m=macros(S.calc);
+  $('#c-mac').innerHTML=S.calc.length?`<span><b>${Math.round(m.kcal)}</b> kcal</span><span><b>${Math.round(m.pr)} g</b> Eiweiß</span><span><b>ca. ${Math.round(m.fat)} g</b> Fett</span>`:'Kalorien und Makros erscheinen, sobald etwas in der Mahlzeit ist.';
   $('#c-kh').textContent=Math.round(m.kh);$('#c-be').textContent=fmt(m.be);$('#c-ke').textContent=fmt(m.ke);
   $('#calc-items').innerHTML=S.calc.length?S.calc.map(([id,g],i)=>{const f=food(id);if(!f)return'';return`<div class="item">${thumb(f)}<div style="min-width:0"><div class="n">${esc(f.name)}</div><div class="kh num">${fmt(f.kh*g/100)} g KH · ${fmt(f.kh*g/1200)} BE</div></div>
     <div class="stepper" style="grid-column:2/-1;justify-self:end"><button data-step="${i}" data-d="-10" aria-label="10 g weniger">−</button><input class="num" type="number" inputmode="numeric" value="${g}" data-gram="${i}" aria-label="Menge in Gramm"><button data-step="${i}" data-d="10" aria-label="10 g mehr">+</button></div></div>`;}).join('')
@@ -817,7 +844,113 @@ $('#calc-custom').onclick=()=>{
 // REZEPTE
 // ============================================================
 let rFilter='Alle';
+const SLOTS=[{k:'b',label:'Frühstück',tag:'Frühstück',meal:'Frühstück'},{k:'m',label:'Mittagessen',tag:'Mittag',meal:'Mittagessen'},{k:'a',label:'Abendessen',tag:'Abend',meal:'Abendessen'}];
+const slotItems=sl=>{const r=RECIPES.find(x=>x.id===sl.id);return r?r.ing.map(([fid,g])=>[fid,Math.round(g*sl.portions/r.serv)]):[];};
+// ============================================================
+// KALORIEN- & MAKRO-RECHNER — allgemeiner Richtwert (Mifflin-St Jeor × Aktivität)
+// ============================================================
+const ACT=[{f:1.2,l:'Wenig Bewegung',d:'Bürojob, kaum Sport'},{f:1.375,l:'Leicht aktiv',d:'1–3× Sport pro Woche'},{f:1.55,l:'Aktiv',d:'3–5× Sport pro Woche'},{f:1.725,l:'Sehr aktiv',d:'Täglich Sport oder körperliche Arbeit'}];
+const AIMS=[{d:0,l:'Gewicht halten'},{d:-400,l:'Etwas abnehmen'},{d:300,l:'Etwas zunehmen'}];
+const SPLITS=[{l:'Ausgewogen',kh:50,pr:20,fat:30},{l:'Weniger KH',kh:40,pr:25,fat:35},{l:'Eiweißbetont',kh:35,pr:30,fat:35}];
+function calcGoal(g){
+  const bmr=10*g.weight+6.25*g.height-5*g.age+(g.sex==='m'?5:-161);
+  const kcal=Math.round((bmr*ACT[g.act].f+AIMS[g.aim].d)/10)*10,sp=SPLITS[g.split];
+  return{kcal,kh:Math.round(kcal*sp.kh/100/4),pr:Math.round(kcal*sp.pr/100/4),fat:Math.round(kcal*sp.fat/100/9)};
+}
+function renderGoal(){
+  const g=S.goal,box=$('#goal-card');if(!box)return;
+  if(!g){box.innerHTML=`<h2>Kalorien & Makros</h2><p class="muted small" style="margin:6px 0 12px">Berechne einen Richtwert für deinen Tag: Kalorien, Kohlenhydrate (auch in BE), Eiweiß und Fett.</p><button class="btn btn-primary btn-block" data-goal>Tagesbedarf berechnen</button>`;return;}
+  const r=calcGoal(g);
+  box.innerHTML=`<div class="sec-head"><h2>Kalorien & Makros</h2><button data-goal style="background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer">Ändern</button></div>
+    <p class="small muted" style="margin:4px 0 12px">${esc(ACT[g.act].l)} · ${esc(AIMS[g.aim].l)} · ${esc(SPLITS[g.split].l)}</p>
+    <div class="goal-grid num"><div><div class="v">${r.kcal}</div><div class="k">kcal pro Tag</div></div><div><div class="v" style="color:var(--carb)">${r.kh} g</div><div class="k">KH · ${fmt(r.kh/12)} BE</div></div><div><div class="v" style="color:var(--brand)">${r.pr} g</div><div class="k">Eiweiß</div></div><div><div class="v" style="color:var(--note)">${r.fat} g</div><div class="k">Fett</div></div></div>
+    <p class="hint" style="margin-top:10px">Allgemeiner Richtwert aus Alter, Größe, Gewicht und Bewegung. Deine Ernährungsberatung oder dein Diabetes-Team kann ihn anders festlegen.</p>`;
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-goal]'))openGoal();});
+function openGoal(){
+  const g=Object.assign({sex:'w',age:35,height:170,weight:70,act:1,aim:0,split:0},S.goal||{});
+  const seg=(key,opts)=>`<div class="seg" data-seg="${key}">${opts.map((o,i)=>`<button aria-pressed="${String(g[key])===String(o.v??i)}" data-v="${o.v??i}">${esc(o.l)}</button>`).join('')}</div>`;
+  const chips=(key,opts)=>`<div class="chips" style="flex-wrap:wrap" data-seg="${key}">${opts.map((o,i)=>`<button class="chip" aria-pressed="${g[key]===i}" data-v="${i}">${esc(o.l)}</button>`).join('')}</div>`;
+  openSheet(`<h3 id="sheet-title">Tagesbedarf berechnen</h3><div class="stack">
+    <div class="field"><label>Geschlecht</label>${seg('sex',[{v:'w',l:'Weiblich'},{v:'m',l:'Männlich'}])}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+      <div class="field"><label for="g-age">Alter</label><input class="input num" id="g-age" type="number" inputmode="numeric" min="14" max="100" value="${g.age}"></div>
+      <div class="field"><label for="g-h">Größe (cm)</label><input class="input num" id="g-h" type="number" inputmode="numeric" min="120" max="230" value="${g.height}"></div>
+      <div class="field"><label for="g-w">Gewicht (kg)</label><input class="input num" id="g-w" type="number" inputmode="decimal" min="35" max="250" value="${g.weight}"></div></div>
+    <div class="field"><label>Bewegung im Alltag</label>${chips('act',ACT)}<span class="small muted" id="g-actd"></span></div>
+    <div class="field"><label>Ziel</label>${chips('aim',AIMS)}</div>
+    <div class="field"><label>Verteilung</label>${chips('split',SPLITS)}<span class="small muted" id="g-spd"></span></div>
+    <div id="g-res"></div>
+    <button class="btn btn-primary btn-block" id="g-save">Richtwert speichern</button>
+    ${S.goal?'<button class="btn btn-soft btn-block" id="g-del">Richtwert entfernen</button>':''}</div>`,el=>{
+    const num=(id,lo,hi)=>{const v=parseFloat(String(el.querySelector(id).value).replace(',','.'));return isFinite(v)?Math.min(hi,Math.max(lo,v)):null;};
+    const read=()=>{const a=num('#g-age',14,100),h=num('#g-h',120,230),w=num('#g-w',35,250);if(a==null||h==null||w==null)return null;g.age=a;g.height=h;g.weight=w;return g;};
+    const upd=()=>{el.querySelector('#g-actd').textContent=ACT[g.act].d;const sp=SPLITS[g.split];el.querySelector('#g-spd').textContent=`${sp.kh} % KH · ${sp.pr} % Eiweiß · ${sp.fat} % Fett`;
+      const ok=read();el.querySelector('#g-res').innerHTML=ok?(r=>`<div class="goal-grid num"><div><div class="v">${r.kcal}</div><div class="k">kcal pro Tag</div></div><div><div class="v" style="color:var(--carb)">${r.kh} g</div><div class="k">KH · ${fmt(r.kh/12)} BE</div></div><div><div class="v" style="color:var(--brand)">${r.pr} g</div><div class="k">Eiweiß</div></div><div><div class="v" style="color:var(--note)">${r.fat} g</div><div class="k">Fett</div></div></div>`)(calcGoal(g)):'<p class="small muted">Bitte Alter, Größe und Gewicht eintragen.</p>';};
+    el.querySelectorAll('[data-seg]').forEach(box=>box.addEventListener('click',ev=>{const b=ev.target.closest('[data-v]');if(!b)return;const k=box.dataset.seg;g[k]=k==='sex'?b.dataset.v:Number(b.dataset.v);box.querySelectorAll('[data-v]').forEach(x=>x.setAttribute('aria-pressed',x===b));upd();}));
+    el.querySelectorAll('input').forEach(i=>i.addEventListener('input',upd));upd();
+    el.querySelector('#g-save').onclick=()=>{if(!read()){toast('Bitte Alter, Größe und Gewicht eintragen');return;}S.goal=Object.assign({},g);save();closeSheet();render();toast('Richtwert gespeichert');};
+    const d=el.querySelector('#g-del');if(d)d.onclick=()=>{S.goal=null;save();closeSheet();render();toast('Richtwert entfernt');};
+  });
+}
+function renderDayplan(){
+  const D=S.day,filled=SLOTS.filter(s=>D[s.k]),G=S.goal&&calcGoal(S.goal);
+  const tot=macros(filled.flatMap(s=>slotItems(D[s.k])));
+  const rows=SLOTS.map(s=>{const sl=D[s.k];const r=sl&&RECIPES.find(x=>x.id===sl.id);
+    if(!r)return`<button class="dp-slot" data-slot="${s.k}"><span class="add">+</span><span class="t"><span class="k">${s.label}</span><span class="n muted">Gericht wählen</span></span></button>`;
+    const m=macros(slotItems(sl));
+    return`<button class="dp-slot" data-slot="${s.k}"><img src="${imgSrc(r.id)}" alt=""><span class="t"><span class="k">${s.label}${sl.portions>1?' · '+sl.portions+' Portionen':''}</span><span class="n">${esc(r.name)}</span></span><span class="v num">${fmt(m.be)} BE</span></button>`;}).join('');
+  const e={kh:tot.kh*4,pr:tot.pr*4,fat:tot.fat*9},sum=e.kh+e.pr+e.fat||1,pc=x=>Math.round(x/sum*100);
+  $('#dayplan').innerHTML=`<div class="sec-head"><h2>Mein Tagesplan</h2>${filled.length?'<button class="link" id="dp-clear" style="background:none;border:0;color:var(--brand);font-weight:600;cursor:pointer">Leeren</button>':''}</div>
+    <p class="small muted" style="margin:4px 0 6px">Drei Gerichte wählen und sehen, was der Tag zusammen ergibt.</p>${rows}
+    ${filled.length?`<div class="totals" style="margin-top:12px"><div><div class="v num">${Math.round(tot.kh)}</div><div class="k">g KH</div></div><div><div class="v num">${fmt(tot.be)}</div><div class="k">BE</div></div><div><div class="v num">${fmt(tot.ke)}</div><div class="k">KE</div></div></div>
+    <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="sec-head"><span style="font-weight:600">Makros am Tag</span><span class="num muted small">${Math.round(tot.kcal)}${G?' von '+G.kcal:''} kcal</span></div>
+      <div class="dp-bar" role="img" aria-label="Energie aus KH ${pc(e.kh)} %, Eiweiß ${pc(e.pr)} %, Fett ${pc(e.fat)} %"><span style="width:${pc(e.kh)}%;background:var(--carb)"></span><span style="width:${pc(e.pr)}%;background:var(--brand)"></span><span style="width:${pc(e.fat)}%;background:var(--note)"></span></div>
+      <div class="dp-legend num"><div><i style="background:var(--carb)"></i>KH<b>${Math.round(tot.kh)} g</b>${G?'von '+G.kh+' g':pc(e.kh)+' %'}</div><div><i style="background:var(--brand)"></i>Eiweiß<b>${Math.round(tot.pr)} g</b>${G?'von '+G.pr+' g':pc(e.pr)+' %'}</div><div><i style="background:var(--note)"></i>Fett ca.<b>${Math.round(tot.fat)} g</b>${G?'von '+G.fat+' g':pc(e.fat)+' %'}</div></div>
+      ${G?'':'<button data-goal style="align-self:flex-start;background:none;border:0;padding:0;color:var(--brand);font-weight:600;cursor:pointer">Mit meinem Tagesbedarf vergleichen</button>'}
+    </div>
+    <button class="btn btn-soft btn-block" id="dp-log" style="margin-top:14px">Alle ins Tagebuch von heute</button>`:''}`;
+}
+$('#dayplan').addEventListener('click',e=>{
+  if(e.target.closest('#dp-clear')){S.day={b:null,m:null,a:null};save();renderRezepte();toast('Tagesplan geleert');return;}
+  if(e.target.closest('#dp-log')){
+    // Zeitpunkte bleiben realistisch: 8, 13 und 19 Uhr am heutigen Tag
+    const hr={b:8,m:13,a:19};let n=0;
+    SLOTS.forEach(s=>{const sl=S.day[s.k];const r=sl&&RECIPES.find(x=>x.id===sl.id);if(!r)return;const it=slotItems(sl);const d=new Date();d.setHours(hr[s.k],0,0,0);
+      S.entries.push({id:uid(),type:'meal',ts:d.getTime(),name:r.name+(sl.portions>1?' ('+sl.portions+' Portionen)':''),kh:r1(macros(it).kh),meal:s.meal,items:it,recipe:r.id});n++;});
+    save();render();toast(n+(n===1?' Mahlzeit':' Mahlzeiten')+' im Tagebuch');return;}
+  const b=e.target.closest('[data-slot]');if(b)openSlot(b.dataset.slot);
+});
+function pickRecipe(slotK){
+  const s=SLOTS.find(x=>x.k===slotK);
+  const list=RECIPES.slice().sort((a,b)=>(b.tags.includes(s.tag)-a.tags.includes(s.tag)));
+  openSheet(`<h3 id="sheet-title">${s.label} wählen</h3><div id="pick-list">${list.map(r=>{const m=macros(r.ing);return`<button class="pick" data-pick="${r.id}"><img src="${imgSrc(r.id)}" alt=""><span style="min-width:0;flex:1"><span style="font-weight:600">${esc(r.name)}</span><br><span class="small muted">${r.tags.filter(t=>t!=='Vegetarisch').join(' · ')}</span></span><span class="pill pill-carb num">${fmt(m.be/r.serv)} BE</span></button>`;}).join('')}</div>`,el=>{
+    el.querySelector('#pick-list').addEventListener('click',ev=>{const p=ev.target.closest('[data-pick]');if(!p)return;S.day[slotK]={id:p.dataset.pick,portions:(S.day[slotK]&&S.day[slotK].portions)||1};save();closeSheet();renderRezepte();});
+  });
+}
+function openSlot(slotK){
+  const sl=S.day[slotK];if(!sl)return pickRecipe(slotK);
+  const s=SLOTS.find(x=>x.k===slotK),r=RECIPES.find(x=>x.id===sl.id);
+  openSheet(`<h3 id="sheet-title">${s.label}</h3><div class="stack">
+    <div style="display:flex;gap:12px;align-items:center"><img src="${imgSrc(r.id)}" alt="" style="width:64px;height:64px;border-radius:14px;object-fit:cover"><b>${esc(r.name)}</b></div>
+    <div class="sec-head" style="align-items:center"><span class="sec-title" style="font-size:17px">Portionen</span>
+      <div class="stepper"><button id="s-minus" aria-label="Eine Portion weniger">−</button><input class="num" id="s-val" readonly aria-label="Portionen"><button id="s-plus" aria-label="Eine Portion mehr">+</button></div></div>
+    <div id="s-mac"></div>
+    <button class="btn btn-soft btn-block" id="s-swap">Anderes Gericht</button>
+    <button class="btn btn-soft btn-block" id="s-open">Rezept ansehen</button>
+    <button class="btn btn-soft btn-block" id="s-del">Aus dem Plan nehmen</button></div>`,el=>{
+    const upd=()=>{el.querySelector('#s-val').value=sl.portions;const m=macros(slotItems(sl));
+      el.querySelector('#s-mac').innerHTML=`<div class="r-macros"><div class="carb"><div class="v num">${Math.round(m.kh)}</div><div class="k">g KH</div></div><div class="carb"><div class="v num">${fmt(m.be)}</div><div class="k">BE</div></div><div><div class="v num">${Math.round(m.pr)}</div><div class="k">g Eiweiß</div></div><div><div class="v num">${Math.round(m.kcal)}</div><div class="k">kcal</div></div></div>`;save();renderRezepte();};upd();
+    el.querySelector('#s-minus').onclick=()=>{if(sl.portions>1){sl.portions--;upd();}};
+    el.querySelector('#s-plus').onclick=()=>{if(sl.portions<4){sl.portions++;upd();}};
+    el.querySelector('#s-swap').onclick=()=>{closeSheet();setTimeout(()=>pickRecipe(slotK),220);};
+    el.querySelector('#s-open').onclick=()=>{closeSheet();setTimeout(()=>openRecipe(r.id),220);};
+    el.querySelector('#s-del').onclick=()=>{S.day[slotK]=null;save();closeSheet();renderRezepte();toast('Aus dem Plan genommen');};
+  });
+}
 function renderRezepte(){
+  renderDayplan();
   const fs=['Alle','Favoriten','Frühstück','Mittag','Abend','Snack','Vegetarisch'];
   $('#r-filter').innerHTML=fs.map(f=>`<button class="chip" aria-pressed="${f===rFilter}" data-rf="${f}">${f}</button>`).join('');
   const list=RECIPES.filter(r=>rFilter==='Alle'||(rFilter==='Favoriten'?S.favs.includes(r.id):r.tags.includes(rFilter)));
@@ -845,12 +978,14 @@ function openRecipe(id){
     <div><span class="sec-title" style="font-size:17px">Zubereitung</span><ol class="steps" style="margin-top:10px">${r.steps.map(s=>`<li>${esc(s)}</li>`).join('')}</ol></div>
     <button class="btn btn-primary btn-block" id="r-log">Als Mahlzeit eintragen</button>
     <button class="btn btn-soft btn-block" id="r-calc">In den Rechner laden</button>
+    <button class="btn btn-soft btn-block" id="r-plan">Zum Tagesplan</button>
     <p class="hint">Nährwerte sind aus Durchschnittswerten der Zutaten berechnet.</p></div>`,el=>{
     const upd=()=>{el.querySelector('#p-val').value=portions;el.querySelector('#r-body').innerHTML=body();};upd();
     el.querySelector('#p-minus').onclick=()=>{if(portions>1){portions--;upd();}};
     el.querySelector('#p-plus').onclick=()=>{if(portions<8){portions++;upd();}};
     const items=()=>r.ing.map(([fid,g])=>[fid,Math.round(g*portions/r.serv)]);
     el.querySelector('#r-log').onclick=()=>{const it=items();const m=macros(it);addEntry({type:'meal',ts:Date.now(),name:r.name+(portions>1?' ('+portions+' Portionen)':''),kh:r1(m.kh),meal:guessMealType(),items:it,recipe:r.id});closeSheet();toast('Im Tagebuch gespeichert');};
+    el.querySelector('#r-plan').onclick=()=>{const s=SLOTS.find(x=>r.tags.includes(x.tag))||SLOTS.find(x=>!S.day[x.k])||SLOTS[1];S.day[s.k]={id:r.id,portions};save();closeSheet();go('rezepte');toast('Als '+s.label+' im Tagesplan');};
     el.querySelector('#r-calc').onclick=()=>{S.calc=items();save();closeSheet();go('rechner');toast('Zutaten im Rechner, Mengen anpassbar');};
   });
 }
@@ -956,7 +1091,7 @@ document.addEventListener('click',e=>{
 // ALLTAG: Notfallplan, Muster, Bericht, Unterwegs, Tausch-Ideen
 // ============================================================
 let patDays=14;
-function renderAlltag(){renderPlan();renderPatterns();renderSwaps();}
+function renderAlltag(){renderPlan();renderGoal();renderPatterns();renderSwaps();}
 function renderPlan(){
   const p=S.plan;const box=$('#plan-card');
   if(!p.text&&!p.phone&&!p.team){
