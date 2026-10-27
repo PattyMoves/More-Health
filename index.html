@@ -386,7 +386,7 @@ textarea.input{padding:12px 14px;min-height:84px;resize:vertical}
     <button class="btn btn-soft btn-block" id="go-unterwegs">Unterwegs-Liste öffnen</button>
   </div>
   <div class="card">
-    <div class="sec-head"><h2>Tausch-Ideen</h2><span class="label">KH pro Portion</span></div>
+    <div class="sec-head"><h2>Tausch-Ideen</h2><span class="label">So viel KH sparst du</span></div>
     <div id="swaps" style="margin-top:4px"></div>
   </div>
   <p class="hint">Alle Auswertungen beschreiben nur deine eigenen Einträge. Sie zeigen Zusammenhänge, keine Ursachen, und ersetzen keine Beratung.</p>
@@ -1203,7 +1203,7 @@ const SWAPS=[
 ];
 function renderSwaps(){
   $('#swaps').innerHTML=SWAPS.map(([a,ga,b,gb,s])=>{const fa=food(a),fb=food(b);const ka=fa.kh*ga/100,kb=fb.kh*gb/100;
-    return`<div class="swap"><span class="t">${esc(fa.name)} → ${esc(fb.name)}</span><span class="d num">−${Math.round(ka-kb)} g</span><span class="s num">${ga} g: ${fmt(ka)} g KH · ${gb} g: ${fmt(kb)} g KH. ${esc(s)}</span></div>`;}).join('');
+    return`<div class="swap"><span class="t">${esc(fa.name)} → ${esc(fb.name)}</span><span class="d num">−${Math.round(ka-kb)} g KH</span><span class="s num">${ga} g: ${fmt(ka)} g KH · ${gb} g: ${fmt(kb)} g KH. ${esc(s)}</span></div>`;}).join('');
 }
 
 // ============================================================
